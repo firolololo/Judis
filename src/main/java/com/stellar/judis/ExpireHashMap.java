@@ -1,4 +1,4 @@
-package com.stellar.util;
+package com.stellar.judis;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;

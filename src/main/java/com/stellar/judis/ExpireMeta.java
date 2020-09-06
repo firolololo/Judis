@@ -1,4 +1,4 @@
-package com.stellar.util;
+package com.stellar.judis;
 
 /**
  * @author cloudwalk3212

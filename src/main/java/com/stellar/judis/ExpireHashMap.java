@@ -1,6 +1,10 @@
 package com.stellar.judis;
 
-import java.util.concurrent.ConcurrentMap;
+import com.sun.istack.internal.NotNull;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.time.temporal.TemporalUnit;
 
 
 /**
@@ -9,6 +13,17 @@ import java.util.concurrent.ConcurrentMap;
  * @date 2020/8/21 15:45
  */
 public class ExpireHashMap<K, V> {
-    private ConcurrentMap<K, ExpireV<V>> concurrentMap;
+    private ConcurrentHashMap<K, ExpireV<V>> expireMap;
+
+    public void ExpireHashMap() {
+        this.expireMap = new ConcurrentHashMap<>();
+    }
+
+    public V putExpire(@NotNull() K k, @NotNull() V v, long duration, @NotNull()TemporalUnit temporalUnit) {
+        LocalDateTime localDateTime = LocalDateTime.now();
+        localDateTime.plus(duration, temporalUnit);
+        ExpireV<V> expireV = expireMap.put(k, new ExpireV<V>(v, localDateTime));
+        return Optional.ofNullable(expireV).map(ExpireV::getValue).orElse(null);
+    }
 
 }

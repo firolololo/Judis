@@ -9,7 +9,16 @@ public class ExpireV<T> {
     private T value;
     private LocalDateTime localDateTime;
 
-    public ExpireV(T t) {
+    public ExpireV(T t, LocalDateTime localDateTime) {
         this.value = t;
+        this.localDateTime = localDateTime;
+    }
+
+    public T getValue() {
+        return value;
+    }
+
+    public LocalDateTime getLocalDateTime() {
+        return localDateTime;
     }
 }

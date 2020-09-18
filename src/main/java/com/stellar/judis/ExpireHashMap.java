@@ -26,4 +26,24 @@ public class ExpireHashMap<K, V> {
         return Optional.ofNullable(expireV).map(ExpireV::getValue).orElse(null);
     }
 
+    public V put(@NotNull() K k, @NotNull() V v) {
+        ExpireV<V> expireV = expireMap.put(k, new ExpireV<V>(v, null));
+        return Optional.ofNullable(expireV).map(ExpireV::getValue).orElse(null);
+    }
+
+    public V get(@NotNull() K k) {
+        ExpireV<V> expireV = expireMap.get(k);
+        if (null == expireV) {
+            return null;
+        }
+        if (null == expireV.getLocalDateTime()) {
+            return expireV.getValue();
+        }
+        LocalDateTime localDateTime = LocalDateTime.now();
+        if (localDateTime.isAfter(expireV.getLocalDateTime())) {
+            expireMap.remove(k);
+            return null;
+        }
+        return expireV.getValue();
+    }
 }

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.time.temporal.TemporalUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 /**
@@ -41,7 +42,6 @@ public class ExpireHashMap<K, V> {
         }
         LocalDateTime localDateTime = LocalDateTime.now();
         if (localDateTime.isAfter(expireV.getLocalDateTime())) {
-            expireMap.remove(k);
             return null;
         }
         return expireV.getValue();

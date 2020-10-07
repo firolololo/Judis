@@ -8,9 +8,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpRequestDecoder;
-import io.netty.handler.codec.http.HttpResponseEncoder;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import org.apache.log4j.Logger;
@@ -36,8 +34,9 @@ public class JudisServer {
                        public void initChannel(SocketChannel ch) throws Exception {
                            ch.pipeline().addLast(new HttpResponseEncoder());
                            ch.pipeline().addLast(new HttpRequestDecoder());
-                           ch.pipeline().addLast(new HttpObjectAggregator(1024 * 64));
-                           ch.pipeline().addLast(new JudisServerHandler());
+                           ch.pipeline().addLast(new HttpObjectAggregator(10 * 1024 * 1024));
+                           ch.pipeline().addLast(new JudisServerInHandler());
+//                           ch.pipeline().addLast(new JudisServerOutHandler());
                        }
                    })
                    .option(ChannelOption.SO_BACKLOG, 128)
@@ -52,6 +51,6 @@ public class JudisServer {
 
     public static void main(String[] args) throws Exception {
         JudisServer server = new JudisServer();
-        server.start(8080);
+        server.start(5888);
     }
 }

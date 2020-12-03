@@ -1,5 +1,7 @@
 package com.stellar.judis.server;
 
+import com.stellar.judis.pipeline.MessageDecoder;
+import com.stellar.judis.pipeline.MessageEncoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -8,6 +10,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
@@ -32,11 +36,15 @@ public class JudisServer {
                    .childHandler(new ChannelInitializer<SocketChannel>() {
                        @Override
                        public void initChannel(SocketChannel ch) throws Exception {
-                           ch.pipeline().addLast(new HttpResponseEncoder());
-                           ch.pipeline().addLast(new HttpRequestDecoder());
-                           ch.pipeline().addLast(new HttpObjectAggregator(10 * 1024 * 1024));
-                           ch.pipeline().addLast(new JudisServerInHandler());
-//                           ch.pipeline().addLast(new JudisServerOutHandler());
+//                           ch.pipeline().addLast(new HttpResponseEncoder());
+//                           ch.pipeline().addLast(new HttpRequestDecoder());
+//                           ch.pipeline().addLast(new HttpObjectAggregator(10 * 1024 * 1024));
+//                           ch.pipeline().addLast(new JudisServerInHandler());
+//                           ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024, 0, 4, 0, 4));
+//                           ch.pipeline().addLast(new LengthFieldPrepender(4));
+                           ch.pipeline().addLast(new MessageEncoder());
+                           ch.pipeline().addLast(new MessageDecoder());
+                           ch.pipeline().addLast(new JudisMessageHandler());
                        }
                    })
                    .option(ChannelOption.SO_BACKLOG, 128)

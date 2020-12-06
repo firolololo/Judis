@@ -6,7 +6,7 @@ package com.stellar.judis.protocol;
  * @date 2020/12/3 14:52
  */
 public enum ProtocolFactoryBean {
-    JUDIS((byte)1, new judisProtocol());
+    JUDIS((byte)1, new JudisProtocol());
     private byte type;
     private Protocol protocol;
 

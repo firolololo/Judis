@@ -11,7 +11,7 @@ import java.util.Arrays;
  * @version 1.0
  * @date 2020/12/3 10:02
  */
-public class judisProtocol implements Protocol {
+public class JudisProtocol implements Protocol {
     public static final Charset CHARTSET = StandardCharsets.UTF_8;
     private static final String SIMPLE_STRING_BYTE = "+";
     private static final String ERROR_BYTE = "-";
@@ -20,10 +20,12 @@ public class judisProtocol implements Protocol {
     private static final String BATCH_STRING_BYTE = "$";
     private static final String CR_BYTE = "\r";
     private static final String LF_BYTE = "\n";
+    // command arg1 arg2 ... argn
+    public static final String SEG_SIGN = " ";
 
     @Override
     public String encode(String content) {
-        String[] strs = content.split(" ");
+        String[] strs = content.split(SEG_SIGN);
         if (strs.length == 0) {
             throw new RuntimeException("invalid content");
         }
@@ -32,8 +34,27 @@ public class judisProtocol implements Protocol {
     }
 
     @Override
+    public String parse(String encodeContent) {
+        String[] strs = encodeContent.split(CR_BYTE + LF_BYTE);
+        if (strs.length == 1) return strs[0].substring(1);
+        try {
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int i = 0; i < strs.length; i++) {
+                if (ARRAY_BYTE.equals(strs[i].substring(0, 1))) continue;
+                if (BATCH_STRING_BYTE.equals(strs[i].substring(0, 1))) {
+                    stringBuilder.append(strs[i + 1]);
+                    stringBuilder.append(SEG_SIGN);
+                }
+            }
+            return stringBuilder.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("judis protocol parse fail");
+        }
+    }
+
+    @Override
     public String decode(String content) {
-        return null;
+        return judisResponse(content);
     }
 
     @Override
@@ -76,7 +97,12 @@ public class judisProtocol implements Protocol {
 
     private String judisResponse(String resp) {
         try {
-            return resp;
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(SIMPLE_STRING_BYTE)
+                    .append(resp)
+                    .append(CR_BYTE)
+                    .append(LF_BYTE);
+            return stringBuilder.toString();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

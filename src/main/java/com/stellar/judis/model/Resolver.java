@@ -6,5 +6,5 @@ package com.stellar.judis.model;
  * @date 2020/12/3 16:26
  */
 public interface Resolver {
-
+    String resolve(String... args);
 }

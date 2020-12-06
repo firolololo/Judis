@@ -10,5 +10,6 @@ import java.nio.charset.Charset;
 public interface Protocol {
     String encode(String content);
     String decode(String content);
+    String parse(String encodeContent);
     Charset charset();
 }

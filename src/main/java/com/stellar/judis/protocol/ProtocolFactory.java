@@ -5,18 +5,18 @@ package com.stellar.judis.protocol;
  * @version 1.0
  * @date 2020/12/3 14:52
  */
-public enum ProtocolFactoryBean {
+public enum ProtocolFactory {
     JUDIS((byte)1, new JudisProtocol());
     private byte type;
     private Protocol protocol;
 
-    ProtocolFactoryBean(byte type, Protocol protocal) {
+    ProtocolFactory(byte type, Protocol protocal) {
         this.type = type;
         this.protocol = protocal;
     }
 
     public static Protocol getProtocol(byte type) {
-        for (ProtocolFactoryBean bean: values()) {
+        for (ProtocolFactory bean: values()) {
             if (bean.type == type) {
                 return bean.protocol;
             }

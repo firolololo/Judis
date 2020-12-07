@@ -64,7 +64,7 @@ public class JudisClient {
             Message message = new Message();
             message.setMessageType(MessageTypeEnum.REQUEST);
             message.setProtocolType(ProtocolEnum.JUDIS);
-            message.setBody("SET TEST TEST");
+            message.setBody("SET TEST 321");
             f.channel().writeAndFlush(message);
             f.channel().closeFuture().sync();
         } finally {

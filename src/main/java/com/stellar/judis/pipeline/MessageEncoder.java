@@ -4,7 +4,7 @@ import com.stellar.judis.model.Message;
 import com.stellar.judis.model.MessageTypeEnum;
 import com.stellar.judis.protocol.Protocol;
 import com.stellar.judis.protocol.ProtocolEnum;
-import com.stellar.judis.protocol.ProtocolFactoryBean;
+import com.stellar.judis.protocol.ProtocolFactory;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -22,7 +22,7 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
     protected void encode(ChannelHandlerContext channelHandlerContext, Message message, ByteBuf byteBuf) throws Exception {
         if (message.getMessageType() != MessageTypeEnum.EMPTY) {
             ProtocolEnum protocolType = message.getProtocolType();
-            Protocol protocol = ProtocolFactoryBean.getProtocol(protocolType.getType());
+            Protocol protocol = ProtocolFactory.getProtocol(protocolType.getType());
             String body = message.getBody();
             byteBuf.writeByte(message.getMessageType().getType());
             byteBuf.writeByte(protocolType.getType());

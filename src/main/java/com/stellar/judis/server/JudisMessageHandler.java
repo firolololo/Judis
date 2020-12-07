@@ -1,10 +1,10 @@
 package com.stellar.judis.server;
 
-import com.alibaba.fastjson.JSONObject;
 import com.stellar.judis.model.Message;
+import com.stellar.judis.model.ResolverFactory;
 import com.stellar.judis.protocol.Protocol;
 import com.stellar.judis.protocol.ProtocolEnum;
-import com.stellar.judis.protocol.ProtocolFactoryBean;
+import com.stellar.judis.protocol.ProtocolFactory;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
@@ -17,8 +17,14 @@ public class JudisMessageHandler extends SimpleChannelInboundHandler<Message> {
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Message message) throws Exception {
         ProtocolEnum protocolType = message.getProtocolType();
-        Protocol protocol = ProtocolFactoryBean.getProtocol(protocolType.getType());
-        channelHandlerContext.writeAndFlush(null);
+        Protocol protocol = ProtocolFactory.getProtocol(protocolType.getType());
+        String instruction = protocol.parse(message.getBody());
+        System.out.println(instruction);
+        String command = ResolverFactory.getCommand(instruction);
+        String[] params = ResolverFactory.getParams(instruction);
+        String resp = ResolverFactory.dispatch(command, params);
+        System.out.println(resp);
+        channelHandlerContext.writeAndFlush(resp);
     }
 
     @Override

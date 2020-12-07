@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ExpireHashMap<K, V> {
     private ConcurrentHashMap<K, ExpireV<V>> expireMap;
 
-    public void ExpireHashMap() {
+    public ExpireHashMap() {
         this.expireMap = new ConcurrentHashMap<>();
     }
 

@@ -14,7 +14,7 @@ public enum JudisCoreBusiness {
     GET("key") {
         @Override
         public String invoke(String... args) {
-            if (args.length != this.params.size() || args[0] == null) return INVOKE_FAIL;
+            if (args.length != getParams().size() || args[0] == null) return INVOKE_FAIL;
             return (String)map.get(args[0]);
         }
     },
@@ -24,7 +24,7 @@ public enum JudisCoreBusiness {
         @Override
         @SuppressWarnings("unchecked")
         public String invoke(String... args) {
-            if (args.length != this.params.size() || args[0] == null || args[1] == null) return INVOKE_FAIL;
+            if (args.length != getParams().size() || args[0] == null || args[1] == null) return INVOKE_FAIL;
             if (KEY_NOT_EXIST.equals(args[4])) {
                 if (map.get(args[0]) != null) return INVOKE_FAIL;
             }
@@ -53,6 +53,9 @@ public enum JudisCoreBusiness {
         Pattern pattern = Pattern.compile("^-?\\d+(\\.\\d+)?$");
         return pattern.matcher(str).matches();
     }
+
+    public List<String> getParams() {return params;}
+
     private List<String> params;
     private static final String KEY_NOT_EXIST = "NX";
 //    private static final String KEY_EXIST = "XX";

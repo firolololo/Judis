@@ -1,10 +1,9 @@
 package com.stellar.judis.protocol;
 
-import com.stellar.judis.exception.JudisProtocolException;
+import com.stellar.judis.model.JudisSymbol;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 /**
  * @author cloudwalk3212
@@ -20,17 +19,15 @@ public class JudisProtocol implements Protocol {
     private static final String BATCH_STRING_BYTE = "$";
     private static final String CR_BYTE = "\r";
     private static final String LF_BYTE = "\n";
-    // command arg1 arg2 ... argn
-    public static final String SEG_SIGN = " ";
 
     @Override
     public String encode(String content) {
-        String[] strs = content.split(SEG_SIGN);
+        String[] strs = content.split(JudisSymbol.SEG_SIGN.getSymbol());
         if (strs.length == 0) {
             throw new RuntimeException("invalid content");
         }
         Command command = checkCommand(strs[0]);
-        return judisCommand(command, Arrays.copyOfRange(strs, 1, strs.length));
+        return judisCommand(strs);
     }
 
     @Override
@@ -43,7 +40,7 @@ public class JudisProtocol implements Protocol {
                 if (ARRAY_BYTE.equals(strs[i].substring(0, 1))) continue;
                 if (BATCH_STRING_BYTE.equals(strs[i].substring(0, 1))) {
                     stringBuilder.append(strs[i + 1]);
-                    stringBuilder.append(SEG_SIGN);
+                    stringBuilder.append(JudisSymbol.SEG_SIGN.getSymbol());
                 }
             }
             return stringBuilder.toString();
@@ -73,7 +70,7 @@ public class JudisProtocol implements Protocol {
         throw new RuntimeException("command not found");
     }
 
-    private String judisCommand(final Command command, final String... args) {
+    private String judisCommand(final String... args) {
         try {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(ARRAY_BYTE)

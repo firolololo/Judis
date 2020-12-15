@@ -7,11 +7,11 @@ import com.stellar.judis.server.JudisCoreBusiness;
  */
 public class JudisGetResolver implements Resolver {
     @Override
-    public String resolve(String... args) {
+    public String resolve(String... args) throws Exception {
         return doGet(args);
     }
 
-    public String doGet(String... args) {
+    public String doGet(String... args) throws Exception {
         return JudisCoreBusiness.GET.invoke(args);
     }
 }

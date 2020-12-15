@@ -11,11 +11,11 @@ public class JudisSetResolver implements Resolver {
 
 
     @Override
-    public String resolve(String... args) {
+    public String resolve(String... args) throws Exception {
         return doSet(args);
     }
 
-    private String doSet(String... args) {
+    private String doSet(String... args) throws Exception {
         String[] paddingArgs = Arrays.copyOf(args, JudisCoreBusiness.SET.getParams().size());
         System.out.println(Arrays.toString(paddingArgs));
         return JudisCoreBusiness.SET.invoke(paddingArgs);

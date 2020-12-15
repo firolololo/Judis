@@ -1,9 +1,11 @@
 package com.stellar.judis.server;
 
 import com.stellar.judis.ExpireHashMap;
+import com.stellar.judis.exception.JudisCoreException;
 
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -13,27 +15,23 @@ import java.util.regex.Pattern;
 public enum JudisCoreBusiness {
     GET("key") {
         @Override
-        public String invoke(String... args) {
-            if (args.length != getParams().size() || args[0] == null) return INVOKE_FAIL;
-            return (String)map.get(args[0]);
+        public String invoke(String... args) throws Exception {
+            if (args.length != getParams().size() || args[0] == null) throw new JudisCoreException();
+            return map.get(args[0]);
         }
     },
 
 
-    SET("key", "value", "EX", "PX", "[NX|XX]") {
+    SET("key", "value", "EX", "[NX|XX]") {
         @Override
-        @SuppressWarnings("unchecked")
-        public String invoke(String... args) {
-            if (args.length != getParams().size() || args[0] == null || args[1] == null) return INVOKE_FAIL;
-            if (KEY_NOT_EXIST.equals(args[4])) {
-                if (map.get(args[0]) != null) return INVOKE_FAIL;
+        public String invoke(String... args) throws Exception {
+            if (args.length != getParams().size() || args[0] == null || args[1] == null) throw new JudisCoreException();
+            if (KEY_NOT_EXIST.equals(args[3])) {
+                if (map.get(args[0]) != null) throw new JudisCoreException();
             }
-            if (args[2] == null && args[3] == null) map.put(args[0], args[1]);
+            if (args[2] == null) return map.put(args[0], args[1]);
             if (numberPredicate(args[2])) {
-                map.putExpire(args[0], args[1], Long.valueOf(args[2]), ChronoUnit.SECONDS);
-            }
-            if (numberPredicate(args[3])) {
-                map.putExpire(args[0], args[1], Long.valueOf(args[3]), ChronoUnit.MILLIS);
+                map.putExpire(args[0], args[1], Long.parseLong(args[2]), ChronoUnit.SECONDS);
             }
             return INVOKE_SUCCESS;
         }
@@ -41,12 +39,10 @@ public enum JudisCoreBusiness {
 
     JudisCoreBusiness(String... params) {
         this.params = new ArrayList<>(params.length);
-        for (String param: params) {
-            this.params.add(param);
-        }
+        this.params.addAll(Arrays.asList(params));
     }
 
-    public abstract String invoke(String... args);
+    public abstract String invoke(String... args) throws Exception;
 
     public boolean numberPredicate(String str) {
         if (str == null) return false;
@@ -59,7 +55,6 @@ public enum JudisCoreBusiness {
     private List<String> params;
     private static final String KEY_NOT_EXIST = "NX";
 //    private static final String KEY_EXIST = "XX";
-    private static final String INVOKE_SUCCESS = "OK";
-    private static final String INVOKE_FAIL = "NIL";
-    private static ExpireHashMap map  = new ExpireHashMap();
+    private static final String INVOKE_SUCCESS = "OK";;
+    private static ExpireHashMap<String, String> map  = new ExpireHashMap<>();
 }

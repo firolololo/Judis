@@ -18,11 +18,11 @@ public enum ResolverFactory implements Resolver {
     }
 
     @Override
-    public String resolve(String... args) {
+    public String resolve(String... args) throws Exception {
         return this.resolver.resolve(args);
     }
 
-    public static String dispatch(String command, String... args) {
+    public static String dispatch(String command, String... args) throws Exception {
         for (ResolverFactory resolver: values()) {
             if (resolver.command.equals(command)) {
                 return resolver.resolve(args);

@@ -6,6 +6,8 @@ import com.stellar.judis.handler.ThriftExecutor;
 import com.stellar.judis.handler.ThriftHandler;
 import com.stellar.judis.rpc.Command;
 import com.stellar.judis.rpc.Heartbeat;
+import com.stellar.judis.server.core.JudisCoreOperation;
+import com.stellar.judis.server.persist.AofAdaptor;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -32,7 +34,8 @@ public class JudisThriftServer {
 
     public JudisThriftServer(int port) {
         TMultiplexedProcessor processor = new TMultiplexedProcessor();
-        processor.registerProcessor("Command", new Command.Processor<CommandHandler>(new CommandHandler()));
+        JudisCoreOperation operation = new JudisCoreOperation(new AofAdaptor<String, String>(), true);
+        processor.registerProcessor("Command", new Command.Processor<CommandHandler>(new CommandHandler(operation)));
         processor.registerProcessor("Heartbeat", new Heartbeat.Processor<HeartbeatHandler>(new HeartbeatHandler()));
         this.listenPort = port;
 

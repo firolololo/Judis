@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.stellar.judis.rpc.Command;
 import com.stellar.judis.rpc.GetResponse;
 import com.stellar.judis.rpc.Heartbeat;
-import com.stellar.judis.rpc.SetRequest;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.protocol.TMultiplexedProtocol;

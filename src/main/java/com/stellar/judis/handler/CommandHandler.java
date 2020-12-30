@@ -1,7 +1,7 @@
 package com.stellar.judis.handler;
 
 import com.stellar.judis.rpc.*;
-import com.stellar.judis.server.JudisCoreBusiness;
+import com.stellar.judis.server.core.CoreOperation;
 import org.apache.thrift.TException;
 
 import java.util.List;
@@ -12,11 +12,16 @@ import java.util.List;
  * @date 2020/12/15 17:47
  */
 public class CommandHandler implements Command.Iface {
+    private CoreOperation<String, String> operation;
+
+    public CommandHandler(CoreOperation<String, String> operation) {
+        this.operation = operation;
+    }
     @Override
     public GetResponse getValue(String key) throws TException {
         GetResponse response = new GetResponse();
         try {
-            String res = JudisCoreBusiness.GET.invoke(key);
+            String res = operation.get(key);
             response.setSuccess(true);
             response.setValue(res);
         } catch (Exception e) {
@@ -30,7 +35,7 @@ public class CommandHandler implements Command.Iface {
         String duration = time > 0 ? String.valueOf(time): null;
         SetResponse response = new SetResponse();
         try {
-            String res = JudisCoreBusiness.SET.invoke(key, value, duration, isPresent ? "XX" : "NX");
+            String res = operation.put(key, value);
             response.setSuccess(true);
             response.setOldValue(res);
         } catch (Exception e) {

@@ -34,7 +34,7 @@ public class JudisThriftServer {
 
     public JudisThriftServer(int port) {
         TMultiplexedProcessor processor = new TMultiplexedProcessor();
-        JudisCoreOperation operation = new JudisCoreOperation(new AofAdaptor<String, String>(), true);
+        JudisCoreOperation operation = new JudisCoreOperation(new AofAdaptor(), true);
         processor.registerProcessor("Command", new Command.Processor<CommandHandler>(new CommandHandler(operation)));
         processor.registerProcessor("Heartbeat", new Heartbeat.Processor<HeartbeatHandler>(new HeartbeatHandler()));
         this.listenPort = port;

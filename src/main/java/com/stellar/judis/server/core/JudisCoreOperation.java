@@ -13,15 +13,15 @@ import java.util.concurrent.TimeUnit;
  * @date 2020/12/30 17:09
  */
 public class JudisCoreOperation implements CoreOperation<String, String> {
-    private PersistAdaptor<String, String> adaptor;
+    private PersistAdaptor adaptor;
     private boolean isMaster;
 
-    public JudisCoreOperation(PersistAdaptor<String, String> adaptor, boolean isMaster) {
+    public JudisCoreOperation(PersistAdaptor adaptor, boolean isMaster) {
         this.adaptor = adaptor;
         this.isMaster = isMaster;
     }
 
-    private Cache<String, String> cache = new Cache<>();
+    private Cache cache = new Cache();
 
     @Override
     public String get(String key) {
@@ -31,7 +31,7 @@ public class JudisCoreOperation implements CoreOperation<String, String> {
     @Override
     public String put(String key, String value) {
         if (isMaster) {
-            adaptor.parse(JudisOperationBean.PUT.parse(key, value));
+            adaptor.parse(JudisOperationBean.PUT, key, value);
             return cache.put(key, value);
         }
         return null;
@@ -41,7 +41,7 @@ public class JudisCoreOperation implements CoreOperation<String, String> {
     public String put(String key, String value, long times, TimeUnit unit) {
         if (isMaster) {
             LocalDateTime localDateTime = LocalDateTime.now().plusMinutes(unit.toMinutes(times));
-            adaptor.parse(JudisOperationBean.PUT.parse(key, value, localDateTime.toString()));
+            adaptor.parse(JudisOperationBean.PUT, key, value, localDateTime.toString());
             return put(key, value, localDateTime);
         }
         return null;
@@ -49,15 +49,17 @@ public class JudisCoreOperation implements CoreOperation<String, String> {
 
     @Override
     public String put(String key, String value, LocalDateTime localDateTime) {
-        if (isMaster)
+        if (isMaster) {
+            adaptor.parse(JudisOperationBean.PUT, key, value, localDateTime.toString());
             return cache.put(key, value, localDateTime);
+        }
         return null;
     }
 
     @Override
     public String delete(String key) {
         if (isMaster) {
-            adaptor.parse(JudisOperationBean.DELETE.parse(key));
+            adaptor.parse(JudisOperationBean.DELETE, key);
             return cache.remove(key);
         }
         return null;

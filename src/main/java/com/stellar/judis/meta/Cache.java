@@ -1,6 +1,5 @@
 package com.stellar.judis.meta;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -10,20 +9,33 @@ import java.util.concurrent.TimeUnit;
  * @version 1.0
  * @date 2020/12/30 15:37
  */
-public class Cache<K, V> implements ICache<K, V> {
-    class ExpireV {
-        private V value;
+public class Cache implements ICache<String, String> {
+    public static class ExpireV {
+        private String value;
         private LocalDateTime expire;
-        public ExpireV(V value, LocalDateTime expire) {
+        public ExpireV(String value, LocalDateTime expire) {
             this.value = value;
             this.expire = expire;
         }
+
+        public String getValue() {
+            return this.value;
+        }
+
+        public LocalDateTime getExpire() {
+            return this.expire;
+        }
+
+        public boolean isExpired() {
+            if (expire == null) return false;
+            return expire.isBefore(LocalDateTime.now());
+        }
     }
 
-    private Map<K, ExpireV> map = new HashMap<>();
+    private Map<String, ExpireV> map = new HashMap<>();
 
     @Override
-    public V get(K key) {
+    public String get(String key) {
         Objects.requireNonNull(key);
         if (map.containsKey(key)) {
             ExpireV v = map.get(key);
@@ -42,7 +54,7 @@ public class Cache<K, V> implements ICache<K, V> {
     }
 
     @Override
-    public V put(K key, V value) {
+    public String put(String key, String value) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(value);
         ExpireV v = new ExpireV(value, null);
@@ -53,7 +65,7 @@ public class Cache<K, V> implements ICache<K, V> {
     }
 
     @Override
-    public V put(K key, V value, long times, TimeUnit unit) {
+    public String put(String key, String value, long times, TimeUnit unit) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(value);
         ExpireV v = new ExpireV(value, LocalDateTime.now().plusMinutes(unit.toMinutes(times)));
@@ -64,7 +76,7 @@ public class Cache<K, V> implements ICache<K, V> {
     }
 
     @Override
-    public LocalDateTime getExpireTime(K key) {
+    public LocalDateTime getExpireTime(String key) {
         Objects.requireNonNull(key);
         if (!map.containsKey(key))
             return null;
@@ -78,7 +90,7 @@ public class Cache<K, V> implements ICache<K, V> {
     }
 
     @Override
-    public V put(K key, V value, LocalDateTime localDateTime) {
+    public String put(String key, String value, LocalDateTime localDateTime) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(value);
         if (localDateTime == null)
@@ -97,11 +109,15 @@ public class Cache<K, V> implements ICache<K, V> {
     }
 
     @Override
-    public V remove(K key) {
+    public String remove(String key) {
         Objects.requireNonNull(key);
         ExpireV ex = map.remove(key);
         return Optional.ofNullable(ex)
                 .map(ev -> ev.value)
                 .orElse(null);
+    }
+
+    public Set<Map.Entry<String, ExpireV>> entry() {
+        return map.entrySet();
     }
 }

@@ -6,6 +6,7 @@ import com.stellar.judis.handler.ThriftExecutor;
 import com.stellar.judis.handler.ThriftHandler;
 import com.stellar.judis.rpc.Command;
 import com.stellar.judis.rpc.Heartbeat;
+import com.stellar.judis.server.core.CoreOperation;
 import com.stellar.judis.server.core.JudisCoreOperation;
 import com.stellar.judis.server.persist.AofAdaptor;
 import io.netty.bootstrap.ServerBootstrap;
@@ -31,12 +32,13 @@ public class JudisThriftServer {
     private final int listenPort;
     private final ServerBootstrap serverBootstrap;
     private Channel listenChannel;
+    private CoreOperation<String, String> coreOperation;
 
     public JudisThriftServer(int port) {
         TMultiplexedProcessor processor = new TMultiplexedProcessor();
-        JudisCoreOperation operation = new JudisCoreOperation(new AofAdaptor(), true);
-        processor.registerProcessor("Command", new Command.Processor<CommandHandler>(new CommandHandler(operation)));
-        processor.registerProcessor("Heartbeat", new Heartbeat.Processor<HeartbeatHandler>(new HeartbeatHandler()));
+        coreOperation = new JudisCoreOperation(new AofAdaptor(), true);
+        processor.registerProcessor("Command", new Command.Processor<>(new CommandHandler(coreOperation)));
+        processor.registerProcessor("Heartbeat", new Heartbeat.Processor<>(new HeartbeatHandler()));
         this.listenPort = port;
 
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);

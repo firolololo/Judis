@@ -33,6 +33,9 @@ public class AofAdaptor implements PersistAdaptor {
     private void init() {
         filePath = dataPath + File.separator + fileName;
         tempFilePath = filePath + ".temp";
+        File file = FileUtil.createFile(filePath);
+        if (!file.exists())
+            throw new RuntimeException("AofAdaptor init failed");
     }
 
     @Override
@@ -67,6 +70,8 @@ public class AofAdaptor implements PersistAdaptor {
     @Override
     public void parse(JudisOperationBean operationBean, String... args) {
         bufferList.add(operationBean.parse(args));
+        if (bufferList.size() >= BUFFER_MAX_CAPACITY)
+            update();
     }
 
     @Override

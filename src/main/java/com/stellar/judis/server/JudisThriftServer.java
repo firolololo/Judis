@@ -1,10 +1,11 @@
 package com.stellar.judis.server;
 
-import com.stellar.judis.handler.CommandHandler;
+import com.stellar.judis.handler.ClientToServerHandler;
 import com.stellar.judis.handler.HeartbeatHandler;
 import com.stellar.judis.handler.ThriftExecutor;
 import com.stellar.judis.handler.ThriftHandler;
-import com.stellar.judis.rpc.Command;
+
+import com.stellar.judis.rpc.ClientToServer;
 import com.stellar.judis.rpc.Heartbeat;
 import com.stellar.judis.server.core.CoreOperation;
 import com.stellar.judis.server.core.JudisCoreOperation;
@@ -37,7 +38,7 @@ public class JudisThriftServer {
     public JudisThriftServer(int port) {
         TMultiplexedProcessor processor = new TMultiplexedProcessor();
         coreOperation = new JudisCoreOperation(new AofAdaptor(), true);
-        processor.registerProcessor("Command", new Command.Processor<>(new CommandHandler(coreOperation)));
+        processor.registerProcessor("Command", new ClientToServer.Processor<>(new ClientToServerHandler(coreOperation)));
         processor.registerProcessor("Heartbeat", new Heartbeat.Processor<>(new HeartbeatHandler()));
         this.listenPort = port;
 

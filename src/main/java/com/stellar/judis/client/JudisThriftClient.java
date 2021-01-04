@@ -1,7 +1,8 @@
 package com.stellar.judis.client;
 
 import com.alibaba.fastjson.JSON;
-import com.stellar.judis.rpc.Command;
+
+import com.stellar.judis.rpc.ClientToServer;
 import com.stellar.judis.rpc.GetResponse;
 import com.stellar.judis.rpc.Heartbeat;
 import org.apache.thrift.TException;
@@ -19,7 +20,7 @@ import org.apache.thrift.transport.TTransport;
  */
 public class JudisThriftClient {
 
-    public static void sendCommand(Command.Client client) throws TException {
+    public static void sendCommand(ClientToServer.Client client) throws TException {
         GetResponse response = client.getValue("key");
         System.out.println(JSON.toJSONString(response));
     }

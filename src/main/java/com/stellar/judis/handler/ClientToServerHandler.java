@@ -11,10 +11,10 @@ import java.util.List;
  * @version 1.0
  * @date 2020/12/15 17:47
  */
-public class CommandHandler implements Command.Iface {
+public class ClientToServerHandler implements ClientToServer.Iface {
     private CoreOperation<String, String> operation;
 
-    public CommandHandler(CoreOperation<String, String> operation) {
+    public ClientToServerHandler(CoreOperation<String, String> operation) {
         this.operation = operation;
     }
     @Override

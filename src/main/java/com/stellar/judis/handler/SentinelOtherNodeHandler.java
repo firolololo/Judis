@@ -1,6 +1,8 @@
 package com.stellar.judis.handler;
 
+import com.alibaba.fastjson.JSONObject;
 import com.stellar.judis.rpc.*;
+import com.stellar.judis.server.Master;
 import org.apache.thrift.TException;
 
 /**
@@ -9,9 +11,19 @@ import org.apache.thrift.TException;
  * @date 2021/1/4 14:43
  */
 public class SentinelOtherNodeHandler implements SentinelOtherNode.Iface {
+    private Master master;
+
+    public SentinelOtherNodeHandler(Master master) {
+        this.master = master;
+    }
+
     @Override
     public Answer ping(Ping message) throws TException {
-        return null;
+        System.out.println(message.getBody());
+        Answer answer = new Answer();
+        answer.setSuccess(true);
+        answer.setBody(JSONObject.toJSONString(master));
+        return answer;
     }
 
     @Override

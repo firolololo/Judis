@@ -7,23 +7,20 @@ import com.stellar.judis.rpc.SentinelOtherNode;
 import com.stellar.judis.server.core.CoreOperation;
 import com.stellar.judis.server.core.JudisCoreOperation;
 import com.stellar.judis.server.persist.AofAdaptor;
-import io.netty.bootstrap.ServerBootstrap;
+import com.stellar.judis.server.task.MasterUpdateTask;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.thrift.TMultiplexedProcessor;
-import org.apache.thrift.TProcessor;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.stellar.judis.Constants.*;
-import static io.netty.channel.ChannelOption.SO_BACKLOG;
 
 /**
  * @author firo
@@ -33,9 +30,8 @@ import static io.netty.channel.ChannelOption.SO_BACKLOG;
 public class Master extends Node {
     private static final InternalLogger LOG = InternalLoggerFactory.getInstance(Master.class);
     private List<Servant> servantList;
-    private TMultiplexedProcessor processor;
-    private CoreOperation<String, String> coreOperation;
-    private volatile AtomicBoolean completed = new AtomicBoolean(false);
+    private transient CoreOperation<String, String> coreOperation;
+    private volatile transient AtomicBoolean completed = new AtomicBoolean(false);
 
     public Master(String address, int port, CoreOperation<String, String> coreOperation) {
         super(address, port);
@@ -50,28 +46,36 @@ public class Master extends Node {
         coreOperation = new JudisCoreOperation(new AofAdaptor(), true);
     }
 
-    public boolean assemble() {
+    public void run() {
+        assemble();
+        start();
+        configTask();
+    }
+
+    public void configTask() {
+        if (this.listenChannel != null) {
+            MasterUpdateTask updateTask = new MasterUpdateTask();
+            this.listenChannel.eventLoop().scheduleAtFixedRate(updateTask, 1L, 1L, TimeUnit.SECONDS);
+        }
+    }
+
+    @Override
+    public void assemble() {
         if (completed.compareAndSet(false, true)) {
             try {
-                processor = new TMultiplexedProcessor();
                 processor.registerProcessor("Command", new ClientToServer.Processor<>(new ClientToServerHandler(coreOperation)));
                 processor.registerProcessor("Heartbeat", new Heartbeat.Processor<>(new HeartbeatHandler()));
-                processor.registerProcessor("Sentinel", new SentinelOtherNode.Processor<>(new SentinelOtherNodeHandler()));
-                serverBootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(MAX_CONTENT_LENGTH, 0, PKG_HEAD_LEN));
-                        pipeline.addLast("gatewayHandler", new MasterBusinessHandler(processor));
-                    }
-                });
-                return completed.get();
+                processor.registerProcessor("Sentinel", new SentinelOtherNode.Processor<>(new SentinelOtherNodeHandler(this)));
             } catch (Exception e) {
                 completed.compareAndSet(true, false);
                 e.printStackTrace();
             }
         }
-        return false;
+    }
+
+    @Override
+    public boolean isAssemble() {
+        return completed.get();
     }
 
     public boolean addServant(Servant servant) {

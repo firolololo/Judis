@@ -1,18 +1,20 @@
 package com.stellar.judis.server;
 
+import com.stellar.judis.handler.MasterBusinessHandler;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.apache.thrift.TMultiplexedProcessor;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.stellar.judis.Constants.SOCK_BACKLOG;
+import static com.stellar.judis.Constants.*;
 import static io.netty.channel.ChannelOption.SO_BACKLOG;
 
 /**
@@ -24,9 +26,10 @@ public abstract class Node implements INode {
     private static final InternalLogger LOG = InternalLoggerFactory.getInstance(Node.class);
     public String address;
     public int port;
-    protected final ServerBootstrap serverBootstrap;
-    private Channel listenChannel;
-    private volatile AtomicBoolean running = new AtomicBoolean(false);
+    protected final transient ServerBootstrap serverBootstrap;
+    protected transient Channel listenChannel;
+    protected transient TMultiplexedProcessor processor;
+    private volatile transient AtomicBoolean running = new AtomicBoolean(false);
 
 
     protected Node(String address, int port) {
@@ -40,6 +43,15 @@ public abstract class Node implements INode {
         serverBootstrap.channel(NioServerSocketChannel.class);
         serverBootstrap.option(SO_BACKLOG, SOCK_BACKLOG);
         serverBootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
+        processor = new TMultiplexedProcessor();
+        serverBootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel socketChannel) throws Exception {
+                ChannelPipeline pipeline = socketChannel.pipeline();
+                pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(MAX_CONTENT_LENGTH, 0, PKG_HEAD_LEN));
+                pipeline.addLast("gatewayHandler", new MasterBusinessHandler(processor));
+            }
+        });
     }
 
     public String getAddress() {
@@ -49,6 +61,10 @@ public abstract class Node implements INode {
     public int getPort() {
         return port;
     }
+
+    public String getId() { return address + ":" + port; }
+
+    public boolean isAlive() { return this.running.get(); }
 
     @Override
     public boolean equals(Object o) {
@@ -64,11 +80,13 @@ public abstract class Node implements INode {
         return Objects.hash(address, port);
     }
 
-    public abstract boolean assemble();
+    public abstract void assemble();
+
+    public abstract boolean isAssemble();
 
     @Override
     public boolean start() {
-        if (assemble()) {
+        if (!isAssemble()) {
             LOG.error("Please assemble the node first");
             return false;
         }

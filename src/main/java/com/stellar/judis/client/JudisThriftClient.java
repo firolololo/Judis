@@ -32,7 +32,7 @@ public class JudisThriftClient {
 
     public static void doClient() {
         try {
-            TTransport transport = new TFramedTransport(new TSocket("127.0.0.1", 8222));
+            TTransport transport = new TFramedTransport(new TSocket("127.0.0.1", 8766));
             TProtocol protocol = new TMultiplexedProtocol(new TCompactProtocol(transport), "Heartbeat");
             Heartbeat.Client client = new Heartbeat.Client(protocol);
             transport.open();

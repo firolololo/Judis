@@ -16,7 +16,12 @@ public class Servant extends Node {
     }
 
     @Override
-    public boolean assemble() {
-        return false;
+    public void assemble() {
+
+    }
+
+    @Override
+    public boolean isAssemble() {
+        return true;
     }
 }

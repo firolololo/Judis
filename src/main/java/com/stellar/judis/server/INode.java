@@ -6,7 +6,8 @@ package com.stellar.judis.server;
  * @date 2021/1/4 16:24
  */
 public interface INode {
-    boolean assemble();
+    void assemble();
+    boolean isAssemble();
     boolean start();
     boolean stop();
 }

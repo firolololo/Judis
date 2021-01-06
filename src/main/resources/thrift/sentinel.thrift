@@ -15,14 +15,14 @@ enum Directive {
 struct Ping {
     1:Type tp = Type.PING,
     2:required string address,
-    3:required string ip,
+    3:required i32 port,
     4:required string body
 }
 
 struct Pong {
     1:Type tp = Type.PONG,
     2:required string address,
-    3:required string ip,
+    3:required i32 port,
     4:required string body
 }
 

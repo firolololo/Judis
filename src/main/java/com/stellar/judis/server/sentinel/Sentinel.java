@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class Sentinel extends Node {
     private static final InternalLogger LOG = InternalLoggerFactory.getInstance(Sentinel.class);
-    private HashedWheelTimer timer;
     private NodeListenerCenter center;
     private Map<String, Master> masterMap;
     private Map<String, TTransport> socketMap;
@@ -38,8 +37,6 @@ public class Sentinel extends Node {
         masterMap = new HashMap<>();
         socketMap = new HashMap<>();
         taskMap = new HashMap<>();
-        // 时间轮 延时任务
-        timer = new HashedWheelTimer();
         // 事件处理中心
         center = new NodeListenerCenter();
         center.register(new SentinelMasterNodeListener());

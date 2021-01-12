@@ -1,6 +1,8 @@
 package com.stellar.judis.meta;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -8,14 +10,37 @@ import java.util.Optional;
  * @version 1.0
  * @date 2020/9/6 15:42
  */
-public class SkipList<E extends Comparable<E>> extends AbstractSortedSet<E> {
+public class JudisSkipList<E extends Comparable<E>> extends AbstractSortedSet<E> implements IJudisElementType {
+
+    static class SkipListNode<E> {
+        public List<SkipListNode<E>> nextNodes;
+        private E value;
+
+        public E getValue() {
+            return value;
+        }
+
+        public SkipListNode(E value) {
+            this.value = value;
+            nextNodes = new ArrayList<>();
+        }
+
+        public int level() {
+            return nextNodes.size() - 1;
+        }
+
+        public String toString() {
+            return String.valueOf(value);
+        }
+    }
+
     private SkipListNode<E> head;
     private int maxLevel;
     private int size;
 
     private static final double PROBABILITY = 0.5;
 
-    public SkipList() {
+    public JudisSkipList() {
         size = 0;
         maxLevel = 0;
         head = new SkipListNode<E>(null);
@@ -40,7 +65,7 @@ public class SkipList<E extends Comparable<E>> extends AbstractSortedSet<E> {
         SkipListNode<E> newNode = new SkipListNode<>(e);
         SkipListNode<E> current = head;
         do {
-            current = findNext(e,current, level);
+            current = findNext(e, current, level);
             newNode.nextNodes.add(0, current.nextNodes.get(level));
             current.nextNodes.set(level, newNode);
         } while (level-- > 0);
@@ -56,10 +81,10 @@ public class SkipList<E extends Comparable<E>> extends AbstractSortedSet<E> {
         return Optional.ofNullable(node).map(SkipListNode::getValue).map(v -> equalTo(e, v)).orElse(false);
     }
 
-    class SkipListIterator<E extends Comparable<E>> implements Iterator<E> {
-        SkipList<E> list;
+    static class SkipListIterator<E extends Comparable<E>> implements Iterator<E> {
+        JudisSkipList<E> list;
         SkipListNode<E> current;
-        public SkipListIterator(SkipList<E> list) {
+        public SkipListIterator(JudisSkipList<E> list) {
             this.list = list;
             this.current = list.getHead();
         }
@@ -121,5 +146,15 @@ public class SkipList<E extends Comparable<E>> extends AbstractSortedSet<E> {
 
     private boolean greaterThan(E a, E b) {
         return a.compareTo(b) > 0;
+    }
+
+    @Override
+    public String serialize() {
+        return null;
+    }
+
+    @Override
+    public JudisElement deserialize(String data) {
+        return null;
     }
 }

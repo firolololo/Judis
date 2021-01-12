@@ -1,6 +1,7 @@
 package com.stellar.judis.server;
 
 import com.stellar.judis.handler.*;
+import com.stellar.judis.meta.JudisElement;
 import com.stellar.judis.rpc.ClientToServer;
 import com.stellar.judis.rpc.Heartbeat;
 import com.stellar.judis.rpc.SentinelOtherNode;
@@ -8,19 +9,13 @@ import com.stellar.judis.server.core.CoreOperation;
 import com.stellar.judis.server.core.JudisCoreOperation;
 import com.stellar.judis.server.persist.AofAdaptor;
 import com.stellar.judis.server.task.MasterUpdateTask;
-import io.netty.channel.*;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-import org.apache.thrift.TMultiplexedProcessor;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static com.stellar.judis.Constants.*;
 
 /**
  * @author firo
@@ -30,10 +25,10 @@ import static com.stellar.judis.Constants.*;
 public class Master extends Node {
     private static final InternalLogger LOG = InternalLoggerFactory.getInstance(Master.class);
     private List<Servant> servantList;
-    private transient CoreOperation<String, String> coreOperation;
+    private transient CoreOperation<String, JudisElement> coreOperation;
     private volatile transient AtomicBoolean completed = new AtomicBoolean(false);
 
-    public Master(String address, int port, CoreOperation<String, String> coreOperation) {
+    public Master(String address, int port, CoreOperation<String, JudisElement> coreOperation) {
         super(address, port);
         servantList = new LinkedList<>();
         this.coreOperation = coreOperation;
@@ -63,8 +58,7 @@ public class Master extends Node {
     public void assemble() {
         if (completed.compareAndSet(false, true)) {
             try {
-                processor.registerProcessor("Command", new ClientToServer.Processor<>(new ClientToServerHandler(coreOperation)));
-                processor.registerProcessor("Heartbeat", new Heartbeat.Processor<>(new HeartbeatHandler()));
+//                processor.registerProcessor("Heartbeat", new Heartbeat.Processor<>(new HeartbeatHandler()));
                 processor.registerProcessor("Sentinel", new SentinelOtherNode.Processor<>(new SentinelOtherNodeHandler(this)));
             } catch (Exception e) {
                 completed.compareAndSet(true, false);

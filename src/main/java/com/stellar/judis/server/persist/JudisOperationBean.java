@@ -3,7 +3,10 @@ package com.stellar.judis.server.persist;
 import com.alibaba.fastjson.JSONObject;
 import com.stellar.judis.exception.JudisCoreException;
 import com.stellar.judis.meta.Cache;
+import com.stellar.judis.meta.JudisElement;
 
+import java.lang.annotation.ElementType;
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,18 +21,18 @@ import java.util.regex.Pattern;
 public enum JudisOperationBean {
     PUT("put") {
         @Override
-        public void invoke(Cache cache, String... args) throws JudisCoreException{
-            if (args.length == 2)
-                cache.put(args[0], args[1]);
-            else if (args.length == 3 && localDateTimePredicate(args[2]))
-                cache.put(args[0], args[1], LocalDateTime.parse(args[2]));
+        public void invoke(Cache cache, JudisElement element, String... args) throws JudisCoreException{
+            if (args.length == 1)
+                cache.put(args[0], element);
+            else if (args.length == 2 && localDateTimePredicate(args[1]))
+                cache.put(args[0], element, LocalDateTime.parse(args[1]));
             else
                 throw new JudisCoreException();
         }
     },
     DELETE("delete") {
         @Override
-        public void invoke(Cache cache, String... args) throws JudisCoreException {
+        public void invoke(Cache cache, JudisElement element, String... args) throws JudisCoreException {
             if (args.length == 1)
                 cache.remove(args[0]);
             else
@@ -43,28 +46,41 @@ public enum JudisOperationBean {
     }
 
     private static final String OPERATION_JSON_OPERATION_NAME = "opt";
+    private static final String OPERATION_JSON_OPERATION_CLASS_NAME = "clazz";
+    private static final String OPERATION_JSON_OPERATION_BODY = "body";
     private static final String OPERATION_JSON_OPERATION_PARAM = "param";
     private static final String OPERATION_JSON_OPERATION_SPLIT = ",";
+    private static final String OPERATION_JSON_OPERATION_DESERIALIZE = "deserialize";
 
-    public String parse(String... args) {
+    public String parse(String className, JudisElement element, String... args) {
+        if (null == className || className.equals("")) throw new RuntimeException("Invalid class name");
+        if (element == null) throw new RuntimeException("Invalid element");
         JSONObject object = new JSONObject();
         object.put(OPERATION_JSON_OPERATION_NAME, operation);
+        object.put(OPERATION_JSON_OPERATION_CLASS_NAME, className);
+        object.put(OPERATION_JSON_OPERATION_BODY, element.getTypeImpl().serialize());
         if (args.length == 0) throw new RuntimeException("Invalid param numbers");
         object.put(OPERATION_JSON_OPERATION_PARAM, args.length == 1 ? args[0] : String.join(OPERATION_JSON_OPERATION_SPLIT, args));
         return JSONObject.toJSONString(object);
     }
 
-    abstract public void invoke(Cache cache, String... args) throws JudisCoreException;
+    abstract void invoke(Cache cache, JudisElement element, String... args) throws JudisCoreException;
 
     public static void execute(Cache cache, String jsonObject) {
         try {
             JSONObject object = JSONObject.parseObject(jsonObject);
             String opt = object.getString(OPERATION_JSON_OPERATION_NAME);
+            String className = object.getString(OPERATION_JSON_OPERATION_CLASS_NAME);
+            String body = object.getString(OPERATION_JSON_OPERATION_BODY);
+            Class<?> clazz = Class.forName(className);
+            Method method = clazz.getDeclaredMethod(OPERATION_JSON_OPERATION_DESERIALIZE, String.class);
             String params = object.getString(OPERATION_JSON_OPERATION_PARAM);
+            // TODO: 保存单个实例调用
+            JudisElement element = (JudisElement)method.invoke(clazz.newInstance(), body);
             String[] args = params.split(OPERATION_JSON_OPERATION_SPLIT);
             for (JudisOperationBean operationBean: values()) {
                 if (operationBean.operation.equals(opt)) {
-                    operationBean.invoke(cache, args);
+                    operationBean.invoke(cache, element, args);
                     return;
                 }
             }

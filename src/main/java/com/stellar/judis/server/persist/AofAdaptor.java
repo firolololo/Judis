@@ -1,6 +1,7 @@
 package com.stellar.judis.server.persist;
 
 import com.stellar.judis.meta.Cache;
+import com.stellar.judis.meta.JudisElement;
 import com.stellar.judis.util.FileUtil;
 
 import java.io.File;
@@ -68,8 +69,8 @@ public class AofAdaptor implements PersistAdaptor {
     }
 
     @Override
-    public void parse(JudisOperationBean operationBean, String... args) {
-        bufferList.add(operationBean.parse(args));
+    public void parse(JudisOperationBean operationBean, String className, JudisElement element, String... args) {
+        bufferList.add(operationBean.parse(className, element, args));
         if (bufferList.size() >= BUFFER_MAX_CAPACITY)
             update();
     }

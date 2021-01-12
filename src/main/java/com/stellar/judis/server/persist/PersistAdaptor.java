@@ -1,6 +1,7 @@
 package com.stellar.judis.server.persist;
 
 import com.stellar.judis.meta.Cache;
+import com.stellar.judis.meta.JudisElement;
 
 /**
  * @author firo
@@ -24,9 +25,10 @@ public interface PersistAdaptor {
     /**
      * 序列化Judis操作，并且写入缓存
      * @param operationBean
-     * @param args
+     * @param className
+     * @param element
      */
-    void parse(JudisOperationBean operationBean, String... args);
+    void parse(JudisOperationBean operationBean, String className, JudisElement element, String... args);
 
     /**
      * 将缓存写入持久化文件

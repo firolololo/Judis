@@ -5,6 +5,7 @@ import com.stellar.judis.handler.HeartbeatHandler;
 import com.stellar.judis.handler.ThriftExecutor;
 import com.stellar.judis.handler.ThriftHandler;
 
+import com.stellar.judis.meta.JudisElement;
 import com.stellar.judis.rpc.ClientToServer;
 import com.stellar.judis.rpc.Heartbeat;
 import com.stellar.judis.server.core.CoreOperation;
@@ -33,7 +34,7 @@ public class JudisThriftServer {
     private final int listenPort;
     private final ServerBootstrap serverBootstrap;
     private Channel listenChannel;
-    private CoreOperation<String, String> coreOperation;
+    private CoreOperation<String, JudisElement> coreOperation;
 
     public JudisThriftServer(int port) {
         TMultiplexedProcessor processor = new TMultiplexedProcessor();

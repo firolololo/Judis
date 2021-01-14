@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
  */
 public interface CoreOperation<K, V> {
     V get(K key);
+    boolean containsKey(K k);
     V put(K key, V value);
     V put(K key, V value, long times, TimeUnit unit);
     V put(K key, V value, LocalDateTime localDateTime);

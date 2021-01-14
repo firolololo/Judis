@@ -30,6 +30,11 @@ public class JudisCoreOperation implements CoreOperation<String, JudisElement> {
     }
 
     @Override
+    public boolean containsKey(String s) {
+        return cache.containsKey(s);
+    }
+
+    @Override
     public JudisElement put(String key, JudisElement value) {
         if (isMaster) {
 //            adaptor.parse(JudisOperationBean.PUT, key, value);
@@ -41,7 +46,7 @@ public class JudisCoreOperation implements CoreOperation<String, JudisElement> {
     @Override
     public JudisElement put(String key, JudisElement value, long times, TimeUnit unit) {
         if (isMaster) {
-            LocalDateTime localDateTime = LocalDateTime.now().plusMinutes(unit.toMinutes(times));
+            LocalDateTime localDateTime = LocalDateTime.now().plusSeconds(unit.toSeconds(times));
 //            adaptor.parse(JudisOperationBean.PUT, key, value, localDateTime.toString());
             return put(key, value, localDateTime);
         }

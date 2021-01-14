@@ -54,6 +54,11 @@ public class Cache implements ICache<String, JudisElement> {
     }
 
     @Override
+    public boolean containsKey(String key) {
+        return map.containsKey(key);
+    }
+
+    @Override
     public JudisElement put(String key, JudisElement value) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(value);

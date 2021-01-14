@@ -7,10 +7,10 @@ import com.stellar.judis.rpc.CommandType;
  * @version 1.0
  * @date 2021/1/12 16:15
  */
-public class JudisElement {
+public class JudisElement implements Comparable<JudisElement>{
     private CommandType type;
     private IJudisElementType typeImpl;
-
+    private int grade;
     public CommandType getType() {
         return type;
     }
@@ -25,5 +25,18 @@ public class JudisElement {
 
     public void setTypeImpl(IJudisElementType typeImpl) {
         this.typeImpl = typeImpl;
+    }
+
+    public int getGrade() {
+        return grade;
+    }
+
+    public void setGrade(int grade) {
+        this.grade = grade;
+    }
+
+    @Override
+    public int compareTo(JudisElement o) {
+        return this.grade - o.getGrade();
     }
 }

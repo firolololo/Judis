@@ -15,6 +15,18 @@ public class JudisString extends JudisElement implements IJudisElementType {
         this.value = value;
     }
 
+    public void append(String part) {
+        this.value = this.value + part;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
     @Override
     public String serialize() {
         return value;

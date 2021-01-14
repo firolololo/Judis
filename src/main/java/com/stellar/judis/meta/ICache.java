@@ -17,6 +17,13 @@ public interface ICache<K, V> {
     V get(K key);
 
     /**
+     * 检查键是否存在
+     * @param key
+     * @return
+     */
+    boolean containsKey(K key);
+
+    /**
      * 设置键值对
      * @param key
      * @param value

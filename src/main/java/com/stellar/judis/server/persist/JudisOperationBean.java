@@ -8,6 +8,7 @@ import com.stellar.judis.meta.JudisElement;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -72,11 +73,15 @@ public enum JudisOperationBean {
             String opt = object.getString(OPERATION_JSON_OPERATION_NAME);
             String className = object.getString(OPERATION_JSON_OPERATION_CLASS_NAME);
             String body = object.getString(OPERATION_JSON_OPERATION_BODY);
-            Class<?> clazz = Class.forName(className);
-            Method method = clazz.getDeclaredMethod(OPERATION_JSON_OPERATION_DESERIALIZE, String.class);
             String params = object.getString(OPERATION_JSON_OPERATION_PARAM);
-            // TODO: 保存单个实例调用
-            JudisElement element = (JudisElement)method.invoke(clazz.newInstance(), body);
+            JudisElement element;
+            if (!judisElementMap.containsKey(className)) {
+                Class<?> clazz = Class.forName(className);
+                Method method = clazz.getDeclaredMethod(OPERATION_JSON_OPERATION_DESERIALIZE, String.class);
+                element = (JudisElement)method.invoke(clazz.newInstance(), body);
+            } else {
+                element = judisElementMap.get(className);
+            }
             String[] args = params.split(OPERATION_JSON_OPERATION_SPLIT);
             for (JudisOperationBean operationBean: values()) {
                 if (operationBean.operation.equals(opt)) {
@@ -103,6 +108,8 @@ public enum JudisOperationBean {
         }
         return records;
     }
+
+    private static final Map<String, JudisElement> judisElementMap = new HashMap<>();
 
     private static boolean numberPredicate(String str) {
         if (str == null) return false;

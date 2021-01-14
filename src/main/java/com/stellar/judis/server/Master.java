@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Master extends Node {
     private static final InternalLogger LOG = InternalLoggerFactory.getInstance(Master.class);
     private List<Servant> servantList;
-    private transient CoreOperation<String, JudisElement> coreOperation;
+    volatile private transient CoreOperation<String, JudisElement> coreOperation;
     private volatile transient AtomicBoolean completed = new AtomicBoolean(false);
 
     public Master(String address, int port, CoreOperation<String, JudisElement> coreOperation) {

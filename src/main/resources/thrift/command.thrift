@@ -8,8 +8,9 @@ enum CommandType {
 }
 
 struct CommandResponse {
-    1:CommandType commandType,
-    2:string data
+    1:bool success,
+    2:CommandType commandType,
+    3:string data
 }
 
 struct ConnectPair {
@@ -37,7 +38,7 @@ service ClientConnectCommand {
 
 service ClientStringCommand {
     CommandResponse getString(1:required string key),
-    CommandResponse setString(1:required string key, 2:required string value, 3:i64 time = -1, 4:bool isPresent = false),
+    CommandResponse setString(1:required string key, 2:required string value, 3:i64 time = -1, 4:bool isPresent = true),
     CommandResponse appendString(1:required string key, 2:required string value),
     CommandResponse mgetString(1:required list<string> keys),
     CommandResponse msetString(1:required list<StringPair> pairs),

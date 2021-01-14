@@ -10,7 +10,7 @@ import java.util.Optional;
  * @version 1.0
  * @date 2020/9/6 15:42
  */
-public class JudisSkipList<E extends Comparable<E>> extends AbstractSortedSet<E> implements IJudisElementType {
+public class SkipList<E extends Comparable<E>> extends AbstractSortedSet<E> {
 
     static class SkipListNode<E> {
         public List<SkipListNode<E>> nextNodes;
@@ -40,7 +40,7 @@ public class JudisSkipList<E extends Comparable<E>> extends AbstractSortedSet<E>
 
     private static final double PROBABILITY = 0.5;
 
-    public JudisSkipList() {
+    public SkipList() {
         size = 0;
         maxLevel = 0;
         head = new SkipListNode<E>(null);
@@ -82,9 +82,9 @@ public class JudisSkipList<E extends Comparable<E>> extends AbstractSortedSet<E>
     }
 
     static class SkipListIterator<E extends Comparable<E>> implements Iterator<E> {
-        JudisSkipList<E> list;
+        SkipList<E> list;
         SkipListNode<E> current;
-        public SkipListIterator(JudisSkipList<E> list) {
+        public SkipListIterator(SkipList<E> list) {
             this.list = list;
             this.current = list.getHead();
         }
@@ -146,15 +146,5 @@ public class JudisSkipList<E extends Comparable<E>> extends AbstractSortedSet<E>
 
     private boolean greaterThan(E a, E b) {
         return a.compareTo(b) > 0;
-    }
-
-    @Override
-    public String serialize() {
-        return null;
-    }
-
-    @Override
-    public JudisElement deserialize(String data) {
-        return null;
     }
 }

@@ -20,4 +20,6 @@ public final class Constants {
     public static final String VALUE_NOT_NULL = "Value not null";
     public static final String KEY_EXISTED_ALREADY = "Key existed already";
     public static final String VALUE_NOT_LONG = "Value not long";
+    public static final String OFFSET_LESS_THAN_ZERO = "Offset less than zero";
+    public static final String RANGE_START_OR_END_INVALID = "Range start or end invalid";
 }

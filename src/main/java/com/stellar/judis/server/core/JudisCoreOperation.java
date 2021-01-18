@@ -16,13 +16,13 @@ import java.util.concurrent.TimeUnit;
 public class JudisCoreOperation implements CoreOperation<String, JudisElement> {
     private PersistAdaptor adaptor;
     private boolean isMaster;
+    private Cache cache;
 
     public JudisCoreOperation(PersistAdaptor adaptor, boolean isMaster) {
         this.adaptor = adaptor;
         this.isMaster = isMaster;
+        this.cache = this.load();
     }
-
-    private Cache cache = new Cache();
 
     @Override
     public JudisElement get(String key) {
@@ -37,7 +37,8 @@ public class JudisCoreOperation implements CoreOperation<String, JudisElement> {
     @Override
     public JudisElement put(String key, JudisElement value) {
         if (isMaster) {
-//            adaptor.parse(JudisOperationBean.PUT, key, value);
+            String className = value.getClass().getName();
+            adaptor.parse(JudisOperationBean.PUT, className, value, key);
             return cache.put(key, value);
         }
         return null;
@@ -47,7 +48,6 @@ public class JudisCoreOperation implements CoreOperation<String, JudisElement> {
     public JudisElement put(String key, JudisElement value, long times, TimeUnit unit) {
         if (isMaster) {
             LocalDateTime localDateTime = LocalDateTime.now().plusSeconds(unit.toSeconds(times));
-//            adaptor.parse(JudisOperationBean.PUT, key, value, localDateTime.toString());
             return put(key, value, localDateTime);
         }
         return null;
@@ -56,7 +56,8 @@ public class JudisCoreOperation implements CoreOperation<String, JudisElement> {
     @Override
     public JudisElement put(String key, JudisElement value, LocalDateTime localDateTime) {
         if (isMaster) {
-//            adaptor.parse(JudisOperationBean.PUT, key, value, localDateTime.toString());
+            String className = value.getClass().getName();
+            adaptor.parse(JudisOperationBean.PUT, className, value, key, localDateTime.toString());
             return cache.put(key, value, localDateTime);
         }
         return null;
@@ -65,9 +66,30 @@ public class JudisCoreOperation implements CoreOperation<String, JudisElement> {
     @Override
     public JudisElement delete(String key) {
         if (isMaster) {
-//            adaptor.parse(JudisOperationBean.DELETE, key);
+            adaptor.parse(JudisOperationBean.DELETE, "", null, key);
             return cache.remove(key);
         }
         return null;
+    }
+
+    @Override
+    public Cache load() {
+        this.cache = this.adaptor.load();
+        return this.cache;
+    }
+
+    @Override
+    public void snapshot(Cache cache) {
+        this.adaptor.snapshot(this.cache);
+    }
+
+    @Override
+    public void parse(JudisOperationBean operationBean, String className, JudisElement element, String... args) {
+        this.adaptor.parse(operationBean, className, element, args);
+    }
+
+    @Override
+    public int update() {
+        return this.adaptor.update();
     }
 }

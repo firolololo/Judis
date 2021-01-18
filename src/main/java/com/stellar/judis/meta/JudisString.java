@@ -9,10 +9,16 @@ import com.stellar.judis.rpc.CommandType;
  */
 public class JudisString extends JudisElement implements IJudisElementType {
     private String value;
+
+    public JudisString() {
+        setType(CommandType.STRING);
+        setTypeImpl(this);
+        this.value = "";
+    }
     public JudisString(String value) {
         setType(CommandType.STRING);
         setTypeImpl(this);
-        this.value = value;
+        setValue(value);
     }
 
     public void append(String part) {

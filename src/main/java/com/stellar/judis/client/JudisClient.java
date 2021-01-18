@@ -1,0 +1,33 @@
+package com.stellar.judis.client;
+
+import com.alibaba.fastjson.JSONObject;
+import com.stellar.judis.rpc.ClientStringCommand;
+import com.stellar.judis.rpc.CommandResponse;
+import org.apache.thrift.protocol.TCompactProtocol;
+import org.apache.thrift.protocol.TMultiplexedProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TFramedTransport;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransport;
+
+/**
+ * @author firo
+ * @version 1.0
+ * @date 2021/1/18 17:11
+ */
+public class JudisClient {
+    public static void main(String[] args) {
+        try {
+            TTransport transport = new TFramedTransport(new TSocket("127.0.0.1", 8766));
+            TProtocol protocol = new TMultiplexedProtocol(new TCompactProtocol(transport), "StringCommand");
+            ClientStringCommand.Client client = new ClientStringCommand.Client(protocol);
+            transport.open();
+//            CommandResponse response = client.setString("test6","test666", 300, false);
+            CommandResponse response = client.getString("test6");
+            System.out.println(JSONObject.toJSONString(response));
+            transport.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

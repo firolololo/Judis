@@ -33,5 +33,5 @@ public interface PersistAdaptor {
     /**
      * 将缓存写入持久化文件
      */
-    void update();
+    int update();
 }

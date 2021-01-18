@@ -14,12 +14,24 @@ public class TBaseCheckUtil {
         if (key == null) throw new TException(Constants.KEY_NOT_NULL);
     }
 
+    public static void checkKeyExisted(JudisElement value) throws TException {
+        if (value == null) throw new TException(Constants.KEY_NOT_EXISTED);
+    }
+
     public static void checkValueNotNull(String value) throws TException {
         if (value == null) throw new TException(Constants.VALUE_NOT_NULL);
     }
 
     public static void checkValueNotNull(JudisElement value) throws TException {
         if (value == null) throw new TException(Constants.VALUE_NOT_NULL);
+    }
+
+    public static void checkOffsetNotLessThanZero(int offset) throws TException {
+        if (offset < 0) throw new TException(Constants.OFFSET_LESS_THAN_ZERO);
+    }
+
+    public static void checkRangeStartAndEndValid(int start, int end) throws TException {
+        if (!(start >= 0 && end >= 0 && end >= start)) throw new TException(Constants.RANGE_START_OR_END_INVALID);
     }
 
     public static void checkValueType(JudisElement value, Class<? extends JudisElement> clazz) throws TException {

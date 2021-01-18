@@ -4,7 +4,8 @@ enum CommandType {
     CONNECT = 1,
     STRING = 2,
     HASH = 3,
-    SORTEDSET = 4
+    SORTEDSET = 4,
+    BITSET = 5
 }
 
 struct CommandResponse {
@@ -38,7 +39,7 @@ service ClientConnectCommand {
 
 service ClientStringCommand {
     CommandResponse getString(1:required string key),
-    CommandResponse setString(1:required string key, 2:required string value, 3:i64 time = -1, 4:bool isPresent = true),
+    CommandResponse setString(1:required string key, 2:required string value, 3:required i64 time = -1, 4:required bool ne = false),
     CommandResponse appendString(1:required string key, 2:required string value),
     CommandResponse mgetString(1:required list<string> keys),
     CommandResponse msetString(1:required list<StringPair> pairs),
@@ -46,8 +47,11 @@ service ClientStringCommand {
     CommandResponse incrBy(1:required string key, 2:i64 increment = 1),
     CommandResponse decr(1:required string key),
     CommandResponse decrBy(1:required string key, 2:i64 decrement = 1),
+}
+
+service ClientBitSetCommand {
     CommandResponse getBit(1:required string key, 2:required i32 offset),
-    CommandResponse setBit(1:required string key, 2:required i32 offset, 3:required string value),
+    CommandResponse setBit(1:required string key, 2:required i32 offset, 3:required bool value = false),
     CommandResponse countBit(1:required string key, 2:i32 start = 0, 3:i32 stop = -1),
     CommandResponse topBit(1:required BitOption option, 2:required string key, 3:required list<string> keys)
 }

@@ -50,7 +50,7 @@ public class AofAdaptor implements PersistAdaptor {
             }
             return cache;
         }
-        return null;
+        return new Cache();
     }
 
     @Override
@@ -76,9 +76,13 @@ public class AofAdaptor implements PersistAdaptor {
     }
 
     @Override
-    public void update() {
+    public int update() {
         final List<String> cur = bufferList;
-        bufferList = new LinkedList<>();
-        FileUtil.append(filePath, cur);
+        if (cur.size() > 0) {
+            bufferList = new LinkedList<>();
+            FileUtil.append(filePath, cur);
+            return cur.size();
+        }
+        return 0;
     }
 }

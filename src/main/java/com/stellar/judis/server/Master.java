@@ -2,8 +2,8 @@ package com.stellar.judis.server;
 
 import com.stellar.judis.handler.*;
 import com.stellar.judis.meta.JudisElement;
-import com.stellar.judis.rpc.ClientToServer;
-import com.stellar.judis.rpc.Heartbeat;
+import com.stellar.judis.rpc.ClientBitSetCommand;
+import com.stellar.judis.rpc.ClientStringCommand;
 import com.stellar.judis.rpc.SentinelOtherNode;
 import com.stellar.judis.server.core.CoreOperation;
 import com.stellar.judis.server.core.JudisCoreOperation;
@@ -49,8 +49,8 @@ public class Master extends Node {
 
     public void configTask() {
         if (this.listenChannel != null) {
-            MasterUpdateTask updateTask = new MasterUpdateTask();
-            this.listenChannel.eventLoop().scheduleAtFixedRate(updateTask, 1L, 1L, TimeUnit.SECONDS);
+            MasterUpdateTask updateTask = new MasterUpdateTask(this.getId(), coreOperation);
+            this.listenChannel.eventLoop().scheduleAtFixedRate(updateTask, 1L, 5L, TimeUnit.SECONDS);
         }
     }
 
@@ -58,7 +58,8 @@ public class Master extends Node {
     public void assemble() {
         if (completed.compareAndSet(false, true)) {
             try {
-//                processor.registerProcessor("Heartbeat", new Heartbeat.Processor<>(new HeartbeatHandler()));
+                processor.registerProcessor("StringCommand", new ClientStringCommand.Processor<>(new ClientStringCommandHandler(coreOperation)));
+                processor.registerProcessor("BitSetCommand", new ClientBitSetCommand.Processor<>(new ClientBitsetCommandHandler(coreOperation)));
                 processor.registerProcessor("Sentinel", new SentinelOtherNode.Processor<>(new SentinelOtherNodeHandler(this)));
             } catch (Exception e) {
                 completed.compareAndSet(true, false);

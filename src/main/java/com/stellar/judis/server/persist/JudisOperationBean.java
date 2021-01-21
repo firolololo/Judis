@@ -99,11 +99,13 @@ public enum JudisOperationBean {
         final LocalDateTime now = LocalDateTime.now();
         for(Map.Entry<String, Cache.ExpireV> entry: cache.entry()) {
             Cache.ExpireV v = entry.getValue();
+            JudisElement element = v.getValue();
+            String className = element.getClass().getName();
             LocalDateTime localDateTime = v.getExpire();
             if (localDateTime == null) {
-                records.add(PUT.parse(entry.getKey(), v.getValue()));
+                records.add(PUT.parse(className, element, entry.getKey()));
             } else if(now.isBefore(localDateTime)) {
-                records.add(PUT.parse(entry.getKey(), v.getValue(), localDateTime.toString()));
+                records.add(PUT.parse(className, element, entry.getKey(), localDateTime.toString()));
             }
         }
         return records;

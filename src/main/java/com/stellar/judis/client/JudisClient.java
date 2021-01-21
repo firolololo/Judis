@@ -16,18 +16,24 @@ import org.apache.thrift.transport.TTransport;
  * @date 2021/1/18 17:11
  */
 public class JudisClient {
-    public static void main(String[] args) {
+    public static void setStringPair(String key, String value) {
         try {
             TTransport transport = new TFramedTransport(new TSocket("127.0.0.1", 8766));
             TProtocol protocol = new TMultiplexedProtocol(new TCompactProtocol(transport), "StringCommand");
             ClientStringCommand.Client client = new ClientStringCommand.Client(protocol);
             transport.open();
-//            CommandResponse response = client.setString("test6","test666", 300, false);
-            CommandResponse response = client.getString("test6");
+            CommandResponse response = client.setString(key, value, -1, false);
             System.out.println(JSONObject.toJSONString(response));
             transport.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+    public static void main(String[] args) {
+        for (int i = 0; i < 10; i++) {
+            String key = String.valueOf(i);
+            String value = String.valueOf(i);
+            new Thread(() -> setStringPair(key, value)).start();
         }
     }
 }

@@ -13,6 +13,8 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.protocol.TMultiplexedProtocol;
 import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TFramedTransport;
+import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 
 /**
@@ -25,18 +27,18 @@ public class SentinelPingTask implements Runnable {
 
     private Sentinel sentinel;
     private String masterId;
-    private TTransport transport;
 
-    public SentinelPingTask(Sentinel sentinel, String masterId, TTransport transport) {
+    public SentinelPingTask(Sentinel sentinel, String masterId) {
         this.sentinel = sentinel;
         this.masterId = masterId;
-        this.transport = transport;
     }
 
     @Override
     public void run() {
         NodeContext context = new NodeContext();
         context.setSentinel(sentinel);
+        Master target = sentinel.getMaster(masterId);
+        TTransport transport = new TFramedTransport(new TSocket(target.getAddress(), target.getPort()));
         try {
             TProtocol protocol = new TMultiplexedProtocol(new TCompactProtocol(transport), "Sentinel");
             SentinelOtherNode.Client client = new SentinelOtherNode.Client(protocol);

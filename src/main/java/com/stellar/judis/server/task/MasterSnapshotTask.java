@@ -8,25 +8,24 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 /**
  * @author firo
  * @version 1.0
- * @date 2021/1/6 14:36
+ * @date 2021/1/20 16:48
  */
-public class MasterUpdateTask implements Runnable {
-    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(MasterUpdateTask.class);
+public class MasterSnapshotTask implements Runnable {
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(MasterSnapshotTask.class);
     private String masterId;
     private CoreOperation<String, JudisElement> coreOperation;
-    public MasterUpdateTask(String masterId, CoreOperation<String, JudisElement> coreOperation) {
+    public MasterSnapshotTask(String masterId, CoreOperation<String, JudisElement> coreOperation) {
         this.masterId = masterId;
         this.coreOperation = coreOperation;
     }
-
     @Override
     public void run() {
         try {
-            int updateItems = this.coreOperation.update();
+            coreOperation.snapshot(null);
             String threadInfo = Thread.currentThread().getName() + "-" + Thread.currentThread().getId();
-            LOG.info("Master {} update success, Thread info:{}, {} items append", masterId, threadInfo, updateItems);
+            LOG.info("Master {} snapshot success, Thread info:{}", masterId, threadInfo);
         } catch (Exception e) {
-            LOG.error("Master {} update failed", masterId, e);
+            LOG.error("Master {} snapshot failed", masterId, e);
         }
     }
 }

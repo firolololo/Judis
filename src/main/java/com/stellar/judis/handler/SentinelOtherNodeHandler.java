@@ -3,6 +3,9 @@ package com.stellar.judis.handler;
 import com.alibaba.fastjson.JSONObject;
 import com.stellar.judis.rpc.*;
 import com.stellar.judis.server.Master;
+import com.stellar.judis.server.core.CoreOperation;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.thrift.TException;
 
 /**
@@ -11,6 +14,7 @@ import org.apache.thrift.TException;
  * @date 2021/1/4 14:43
  */
 public class SentinelOtherNodeHandler implements SentinelOtherNode.Iface {
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(SentinelOtherNodeHandler.class);
     private Master master;
 
     public SentinelOtherNodeHandler(Master master) {
@@ -19,7 +23,7 @@ public class SentinelOtherNodeHandler implements SentinelOtherNode.Iface {
 
     @Override
     public Answer ping(Ping message) throws TException {
-        System.out.println(message.getBody());
+        LOG.info("Master {} ping success, Sentinel info:{}", master.getId(), message.getBody());
         Answer answer = new Answer();
         answer.setSuccess(true);
         answer.setBody(JSONObject.toJSONString(master));
@@ -41,7 +45,9 @@ public class SentinelOtherNodeHandler implements SentinelOtherNode.Iface {
                 System.out.println("update");
                 break;
             case SNAPSHOT:
-                System.out.println("snapshot");
+                String threadInfo = Thread.currentThread().getName() + "-" + Thread.currentThread().getId();
+                LOG.info("Master {} ping success, Thread info:{}", master.getId(), threadInfo);
+                master.getCoreOperation().snapshot(null);
                 break;
         }
         Answer answer = new Answer();

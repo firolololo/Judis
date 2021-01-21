@@ -1,8 +1,11 @@
 package com.stellar.judis.handler;
 
+import com.stellar.judis.server.task.MasterUpdateTask;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.thrift.TMultiplexedProcessor;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.transport.TByteBuffer;
@@ -16,6 +19,7 @@ import java.nio.ByteBuffer;
  * @date 2021/1/4 15:22
  */
 public class MasterBusinessHandler extends SimpleChannelInboundHandler<ByteBuf> {
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(MasterBusinessHandler.class);
     private final TMultiplexedProcessor processor;
     private static final int OUT_BUFFER_LENGTH = 256;
 
@@ -36,6 +40,7 @@ public class MasterBusinessHandler extends SimpleChannelInboundHandler<ByteBuf> 
             outBuf.flip();
             int retLen = outBuf.remaining();
             ByteBuf dstBuf = channelHandlerContext.alloc().buffer(retLen).writeBytes(outBuf);
+            LOG.info("threadInfo:{}", Thread.currentThread().getName() + "-" + Thread.currentThread().getId());
             channelHandlerContext.writeAndFlush(dstBuf);
         } catch (Exception e) {
             e.printStackTrace();

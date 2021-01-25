@@ -40,7 +40,6 @@ public class MasterBusinessHandler extends SimpleChannelInboundHandler<ByteBuf> 
             outBuf.flip();
             int retLen = outBuf.remaining();
             ByteBuf dstBuf = channelHandlerContext.alloc().buffer(retLen).writeBytes(outBuf);
-            LOG.info("threadInfo:{}", Thread.currentThread().getName() + "-" + Thread.currentThread().getId());
             channelHandlerContext.writeAndFlush(dstBuf);
         } catch (Exception e) {
             e.printStackTrace();

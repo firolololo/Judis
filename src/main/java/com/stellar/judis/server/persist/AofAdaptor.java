@@ -7,6 +7,7 @@ import com.stellar.judis.util.FileUtil;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author firo
@@ -21,6 +22,7 @@ public class AofAdaptor implements PersistAdaptor {
     private String fileName = "default.aof";
     private String filePath;
     private String tempFilePath;
+    private AtomicBoolean isSnapshot = new AtomicBoolean(false);
 
     public AofAdaptor() {
         init();
@@ -56,12 +58,16 @@ public class AofAdaptor implements PersistAdaptor {
     @Override
     public void snapshot(Cache cache) {
         File temp = FileUtil.createFile(tempFilePath);
-        if (temp.exists()) {
-            FileUtil.write(tempFilePath, JudisOperationBean.parseCache(cache));
-            if (temp.length() > 0) {
-                File file = new File(filePath);
-                FileUtil.deleteFile(file);
-                FileUtil.rename(tempFilePath, filePath);
+        if (temp.exists() && isSnapshot.compareAndSet(false, true)) {
+            try {
+                FileUtil.write(tempFilePath, JudisOperationBean.parseCache(cache));
+                if (temp.length() > 0) {
+                    File file = new File(filePath);
+                    FileUtil.deleteFile(file);
+                    FileUtil.rename(tempFilePath, filePath);
+                }
+            } finally {
+                isSnapshot.compareAndSet(true, false);
             }
         } else {
             throw new RuntimeException("Snapshot failed");
@@ -77,12 +83,15 @@ public class AofAdaptor implements PersistAdaptor {
 
     @Override
     public int update() {
-        final List<String> cur = bufferList;
-        if (cur.size() > 0) {
-            bufferList = new LinkedList<>();
-            FileUtil.append(filePath, cur);
-            return cur.size();
+        if (!isSnapshot.get()) {
+            final List<String> cur = new LinkedList<>(bufferList);
+            if (cur.size() > 0) {
+                bufferList = new LinkedList<>();
+                FileUtil.append(filePath, cur);
+                return cur.size();
+            }
+            return 0;
         }
-        return 0;
+        return -1;
     }
 }

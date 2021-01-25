@@ -18,7 +18,7 @@ import org.apache.thrift.transport.TTransport;
 public class JudisClient {
     public static void setStringPair(String key, String value) {
         try {
-            TTransport transport = new TFramedTransport(new TSocket("127.0.0.1", 8766));
+            TTransport transport = new TFramedTransport(new TSocket("127.0.0.1", 8768));
             TProtocol protocol = new TMultiplexedProtocol(new TCompactProtocol(transport), "StringCommand");
             ClientStringCommand.Client client = new ClientStringCommand.Client(protocol);
             transport.open();
@@ -30,7 +30,7 @@ public class JudisClient {
         }
     }
     public static void main(String[] args) {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10000; i++) {
             String key = String.valueOf(i);
             String value = String.valueOf(i);
             new Thread(() -> setStringPair(key, value)).start();

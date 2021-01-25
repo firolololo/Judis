@@ -12,7 +12,7 @@ public class SentinelMain {
     public static void main(String[] args) {
         Sentinel sentinel = new Sentinel("127.0.0.1", 24889);
         sentinel.run();
-        Master master = new Master("127.0.0.1", 8766);
+        Master master = new Master("127.0.0.1", 8768);
         sentinel.addMaster(master);
     }
 }

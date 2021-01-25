@@ -9,7 +9,7 @@ import com.stellar.judis.server.Master;
  */
 public class MasterMain {
     public static void main(String[] args) {
-        Master master = new Master("127.0.0.1", 8766);
+        Master master = new Master("127.0.0.1", 8768);
         master.run();
     }
 }

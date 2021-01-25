@@ -46,7 +46,7 @@ public class SentinelOtherNodeHandler implements SentinelOtherNode.Iface {
                 break;
             case SNAPSHOT:
                 String threadInfo = Thread.currentThread().getName() + "-" + Thread.currentThread().getId();
-                LOG.info("Master {} ping success, Thread info:{}", master.getId(), threadInfo);
+                LOG.info("Master {} snapshot success, Thread info:{}", master.getId(), threadInfo);
                 master.getCoreOperation().snapshot(null);
                 break;
         }

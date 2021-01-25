@@ -4,6 +4,7 @@ import com.stellar.judis.meta.NodeListenerCenter;
 import com.stellar.judis.server.Master;
 import com.stellar.judis.server.Node;
 import com.stellar.judis.server.task.SentinelPingTask;
+import com.stellar.judis.server.task.SentinelSnapshotTask;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
@@ -81,10 +82,13 @@ public class Sentinel extends Node {
     private void registerTask(Master master) {
         if (listenChannel != null) {
             SentinelPingTask pingTask = new SentinelPingTask(this, master.getId());
-            ScheduledFuture<?> scheduledFuture = this.listenChannel.eventLoop().scheduleAtFixedRate(pingTask, 1L, 1L, TimeUnit.SECONDS);
+            ScheduledFuture<?> pingFuture = this.listenChannel.eventLoop().scheduleAtFixedRate(pingTask, 1L, 1L, TimeUnit.SECONDS);
+            SentinelSnapshotTask snapshotTask = new SentinelSnapshotTask(this, master.getId());
+            ScheduledFuture<?> snapshotFuture = this.listenChannel.eventLoop().scheduleAtFixedRate(snapshotTask, 60L, 60L, TimeUnit.SECONDS);
             if (!taskMap.containsKey(master.getId()))
                 taskMap.put(master.getId(), new LinkedList<>());
-            taskMap.get(master.getId()).add(scheduledFuture);
+            taskMap.get(master.getId()).add(pingFuture);
+            taskMap.get(master.getId()).add(snapshotFuture);
         }
     }
 

@@ -8,7 +8,6 @@ import com.stellar.judis.rpc.SentinelOtherNode;
 import com.stellar.judis.server.core.CoreOperation;
 import com.stellar.judis.server.core.JudisCoreOperation;
 import com.stellar.judis.server.persist.AofAdaptor;
-import com.stellar.judis.server.task.MasterSnapshotTask;
 import com.stellar.judis.server.task.MasterUpdateTask;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -51,9 +50,7 @@ public class Master extends Node {
     public void configTask() {
         if (this.listenChannel != null) {
             MasterUpdateTask updateTask = new MasterUpdateTask(this.getId(), coreOperation);
-//            MasterSnapshotTask snapshotTask = new MasterSnapshotTask(this.getId(), coreOperation);
             this.listenChannel.eventLoop().scheduleAtFixedRate(updateTask, 1L, 5L, TimeUnit.SECONDS);
-//            this.listenChannel.eventLoop().scheduleAtFixedRate(snapshotTask, 60L, 60L, TimeUnit.SECONDS);
         }
     }
 

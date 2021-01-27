@@ -2,6 +2,8 @@ package com.stellar.judis.meta;
 
 import com.stellar.judis.rpc.CommandType;
 
+import java.time.LocalDateTime;
+
 /**
  * @author firo
  * @version 1.0
@@ -10,7 +12,12 @@ import com.stellar.judis.rpc.CommandType;
 public class JudisElement implements Comparable<JudisElement>{
     private CommandType type;
     private IJudisElementType typeImpl;
-    private int grade;
+    private LocalDateTime lastVisitTime;
+
+    public JudisElement() {
+        this.lastVisitTime = LocalDateTime.now();
+    }
+
     public CommandType getType() {
         return type;
     }
@@ -27,16 +34,16 @@ public class JudisElement implements Comparable<JudisElement>{
         this.typeImpl = typeImpl;
     }
 
-    public int getGrade() {
-        return grade;
+    public LocalDateTime getLastVisitTime() {
+        return lastVisitTime;
     }
 
-    public void setGrade(int grade) {
-        this.grade = grade;
+    public void setLastVisitTime(LocalDateTime lastVisitTime) {
+        this.lastVisitTime = lastVisitTime;
     }
 
     @Override
     public int compareTo(JudisElement o) {
-        return this.grade - o.getGrade();
+        return this.lastVisitTime.compareTo(o.getLastVisitTime());
     }
 }

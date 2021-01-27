@@ -1,12 +1,11 @@
 package com.stellar.judis.util;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.nio.file.OpenOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.util.*;
 
 /**
@@ -15,120 +14,142 @@ import java.util.*;
  * @date 2020/12/31 10:14
  */
 public class FileUtil {
-
-    private FileUtil() {}
-
-    public static void write(final String filePath,
-                             final Iterable<? extends CharSequence> lines,
-                             final String charset,
-                             OpenOption... openOptions) {
+    public static Path joinPath(String first, String... more) {
+        return Paths.get(first, more);
+    }
+    /**
+     * 从文件读取
+     * @param path
+     * @return
+     */
+    public static byte[] readBytes(Path path) {
         try {
-            CharsetEncoder encoder = Charset.forName(charset).newEncoder();
-            final Path path = Paths.get(filePath);
-            Path parentPath = path.getParent();
-            if (parentPath != null) {
-                File parent = parentPath.toFile();
-                if (!parent.exists()) {
-                    parent.mkdir();
-                }
-            }
-            OutputStream out = path.getFileSystem().provider().newOutputStream(path, openOptions);
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, encoder))) {
-                for (CharSequence line: lines) {
-                    if (line != null) {
-                        writer.append(line);
-                        writer.newLine();
+            return Files.readAllBytes(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static List<String> readLines(Path path) {
+        try {
+            return Files.readAllLines(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static List<String> readLinesByChannel(Path path, Charset charset) {
+        try (FileChannel channel = FileChannel.open(path)) {
+            List<String> list = new LinkedList<>();
+            ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
+            ByteBuffer stringBuffer = ByteBuffer.allocate(1024);
+            int bytesRead = channel.read(buffer);
+            while (bytesRead != -1) {
+                buffer.flip();
+                while (buffer.hasRemaining()) {
+                    byte b = buffer.get();
+                    if (b == 10 || b == 13) {
+                        stringBuffer.flip();
+                        final String line = charset.decode(stringBuffer).toString();
+                        list.add(line);
+                        stringBuffer.clear();
+                    } else {
+                        if (stringBuffer.hasRemaining()) {
+                            stringBuffer.put(b);
+                        } else {
+                            final int capacity = stringBuffer.capacity();
+                            byte[] newBuffer = new byte[capacity * 2];
+                            System.arraycopy(stringBuffer.array(), 0, newBuffer, 0, capacity);
+                            stringBuffer = (ByteBuffer)ByteBuffer.wrap(newBuffer).position(capacity);
+                        }
                     }
                 }
+                buffer.clear();
+                bytesRead = channel.read(buffer);
             }
+            return list;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static boolean createFile(Path path) {
+        try {
+            if (Files.exists(path)) {
+                return true;
+            }
+            Path dir = path.getParent();
+            if (!Files.exists(dir)) {
+                Files.createDirectory(dir);
+            }
+            Files.createFile(path);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * 写入文件
+     * @param path
+     * @param lines
+     * @param charset
+     * @param openOptions
+     */
+    public static void write(Path path, Iterable<? extends CharSequence> lines, Charset charset, OpenOption... openOptions) {
+        try {
+            Files.write(path, lines, charset, openOptions);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void write(Path path, String content, Charset charset) {
+        write(path, Collections.singleton(content), charset);
+    }
+
+    public static void write(Path path, List<String> lines, Charset charset) {
+        write(path, lines, charset);
+    }
+
+    public static void append(Path path, String content, Charset charset) {
+        write(path, Collections.singleton(content), charset, StandardOpenOption.APPEND);
+    }
+
+    public static void appendLines(Path path, List<String> lines, Charset charset) {
+        write(path, lines, charset, StandardOpenOption.APPEND);
+    }
+
+    /**
+     * 拷贝文件
+     * @param fromPath
+     * @param toPath
+     */
+    public static void copyIfAbsent(Path fromPath, Path toPath) {
+        try {
+            Files.copy(fromPath, toPath);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Write content to file：" + filePath + " failed");
         }
     }
 
-    public static void write(final String filePath, final CharSequence line, OpenOption... openOptions) {
-        write(filePath, Collections.singletonList(line), "UTF-8", openOptions);
-    }
-
-    public static void write(final String filePath, final Iterable<? extends CharSequence> lines, OpenOption... openOptions) {
-        write(filePath, lines, "UTF-8", openOptions);
-    }
-
-    public static List<String> getFileContentEachLine(File file) {
-        return getFileContentEachLine(file, 0);
-    }
-
-    public static List<String> getFileContentEachLine(File file, int initLine) {
-        List<String> contentList = new LinkedList<>();
-        if (!file.exists()) {
-            return contentList;
-        }
-        try (FileInputStream fileInputStream = new FileInputStream(file);
-             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
-             BufferedReader reader = new BufferedReader(inputStreamReader)) {
-            int lineNo = 0;
-            while (lineNo < initLine) {
-                lineNo++;
-                reader.readLine();
-            }
-            String dataEachLine;
-            while ((dataEachLine = reader.readLine()) != null) {
-                lineNo++;
-                if (Objects.equals("", dataEachLine)) continue;
-                contentList.add(dataEachLine);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Get file：" + file.getPath() + " content failed");
-        }
-        return contentList;
-    }
-
-    public static File createFile(final String filePath) {
-        if (filePath == null || filePath.equals("")) throw new RuntimeException("path can't be empty");
-        File file = new File(filePath);
-        if (file.exists())
-            return file;
-        File dir = file.getParentFile();
-        if (!dir.exists() && !dir.mkdirs())
-            throw new RuntimeException("Parent file create failed");
+    public static void copy(Path fromPath, Path toPath) {
         try {
-            boolean createFile = file.createNewFile();
-            if (!createFile) throw new RuntimeException("File：" + filePath + " create failed");
-            return file;
-        } catch (IOException e) {
+            Files.copy(fromPath, toPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+        } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("File：" + filePath + " create failed");
         }
     }
 
-    public static void deleteFile(final File file) {
-        if (file != null && file.exists()) {
-            boolean res = file.delete();
-            if (!res) throw new RuntimeException("File：" + file.getPath() + " delete failed");
+    public static void deleteIfExists(Path path) {
+        try {
+            Files.deleteIfExists(path);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    }
-
-    public static boolean rename(final String sourcePath, final String targetPath) {
-        File sourceFile = new File(sourcePath);
-        File targetFile = new File(targetPath);
-        return sourceFile.renameTo(targetFile);
-    }
-
-
-
-    public static boolean isEmpty(final String filePath) {
-        if (filePath == null || filePath.equals("")) return true;
-        File file = new File(filePath);
-        return file.length() <= 0;
-    }
-
-    public static void append(final String filePath, final String line) {
-        write(filePath, line, StandardOpenOption.APPEND);
-    }
-
-    public static void append(final String filePath, final Iterable<? extends CharSequence> lines) {
-        write(filePath, lines, StandardOpenOption.APPEND);
     }
 }

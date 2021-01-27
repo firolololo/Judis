@@ -3,9 +3,14 @@ package com.stellar.judis.server.persist;
 import com.stellar.judis.meta.Cache;
 import com.stellar.judis.meta.JudisElement;
 import com.stellar.judis.util.FileUtil;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueue;
 
 import java.io.File;
-import java.util.LinkedList;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -15,14 +20,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @date 2020/12/30 16:54
  */
 public class AofAdaptor implements PersistAdaptor {
-    private List<String> bufferList = new LinkedList<>();
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(AofAdaptor.class);
     private static final int BUFFER_MAX_CAPACITY = 2048;
+    private MpscArrayQueue<String> bufferList = new MpscArrayQueue<>(BUFFER_MAX_CAPACITY);
 
     private final String dataPath = "." + File.separator + "data";
     private String fileName = "default.aof";
-    private String filePath;
-    private String tempFilePath;
+    private String tempFileName = "default.aof.temp";
+    private Path filePath;
+    private Path tempFilePath;
     private AtomicBoolean isSnapshot = new AtomicBoolean(false);
+    private AtomicBoolean isUpdate = new AtomicBoolean(false);
 
     public AofAdaptor() {
         init();
@@ -34,22 +42,26 @@ public class AofAdaptor implements PersistAdaptor {
     }
 
     private void init() {
-        filePath = dataPath + File.separator + fileName;
-        tempFilePath = filePath + ".temp";
-        File file = FileUtil.createFile(filePath);
-        if (!file.exists())
+        filePath = FileUtil.joinPath(dataPath, fileName);
+        tempFilePath = FileUtil.joinPath(dataPath, tempFileName);
+        if (!FileUtil.createFile(filePath))
             throw new RuntimeException("AofAdaptor init failed");
     }
 
     @Override
     public Cache load() {
-        if (!FileUtil.isEmpty(filePath)) {
-            File file = new File(filePath);
-            List<String> records = FileUtil.getFileContentEachLine(file);
+        if (Files.exists(filePath)) {
+            long startTime = System.currentTimeMillis();
+            List<String> records = FileUtil.readLines(filePath);
+            if (records == null || records.size() == 0)
+                return new Cache();
             Cache cache = new Cache();
             for (String record: records) {
                 JudisOperationBean.execute(cache, record);
             }
+            long endTime = System.currentTimeMillis();
+            float excTime= (float)(endTime - startTime) / 1000;
+            LOG.info("load cost time:{}s", excTime);
             return cache;
         }
         return new Cache();
@@ -57,15 +69,14 @@ public class AofAdaptor implements PersistAdaptor {
 
     @Override
     public void snapshot(Cache cache) {
-        File temp = FileUtil.createFile(tempFilePath);
-        if (temp.exists() && isSnapshot.compareAndSet(false, true)) {
+        if (!Files.exists(tempFilePath)) {
+            FileUtil.createFile(tempFilePath);
+        }
+        if (Files.exists(tempFilePath) && isSnapshot.compareAndSet(false, true)) {
             try {
-                FileUtil.write(tempFilePath, JudisOperationBean.parseCache(cache));
-                if (temp.length() > 0) {
-                    File file = new File(filePath);
-                    FileUtil.deleteFile(file);
-                    FileUtil.rename(tempFilePath, filePath);
-                }
+                FileUtil.appendLines(tempFilePath, JudisOperationBean.parseCache(cache), StandardCharsets.UTF_8);
+                FileUtil.copy(tempFilePath, filePath);
+                FileUtil.deleteIfExists(tempFilePath);
             } finally {
                 isSnapshot.compareAndSet(true, false);
             }
@@ -76,21 +87,22 @@ public class AofAdaptor implements PersistAdaptor {
 
     @Override
     public void parse(JudisOperationBean operationBean, String className, JudisElement element, String... args) {
-        bufferList.add(operationBean.parse(className, element, args));
-        if (bufferList.size() >= BUFFER_MAX_CAPACITY)
+        String hist = operationBean.parse(className, element, args);
+        // 插入记录失败
+        if (!bufferList.offer(hist)) {
+            FileUtil.append(filePath, hist, StandardCharsets.UTF_8);
             update();
+        }
     }
 
     @Override
     public int update() {
-        if (!isSnapshot.get()) {
-            final List<String> cur = new LinkedList<>(bufferList);
-            if (cur.size() > 0) {
-                bufferList = new LinkedList<>();
-                FileUtil.append(filePath, cur);
-                return cur.size();
+        if (!isSnapshot.get() && isUpdate.compareAndSet(false, true)) {
+            try {
+                return bufferList.drain(line -> FileUtil.append(filePath, line, StandardCharsets.UTF_8));
+            } finally {
+                isUpdate.compareAndSet(true, false);
             }
-            return 0;
         }
         return -1;
     }

@@ -33,6 +33,13 @@ public class Cache implements ICache<String, JudisElement> {
     }
 
     private Map<String, ExpireV> map = new HashMap<>();
+    private PriorityQueue<JudisElement> randomClearPool = new PriorityQueue<>(JudisElement::compareTo);
+    private static final int RANDOM_CLEAR_POOL_SIZE = 32;
+    private static final int MAX_RANDOM_PICK_TIMES = 10000;
+
+    private void tryPutWithClear(String key, ExpireV v) {
+
+    }
 
     @Override
     public JudisElement get(String key) {
@@ -124,5 +131,13 @@ public class Cache implements ICache<String, JudisElement> {
 
     public Set<Map.Entry<String, ExpireV>> entry() {
         return map.entrySet();
+    }
+
+    public static void main(String[] args) {
+        Map<String, String> map = new HashMap<>();
+        map.put("111", "111");
+        map.put("222", "222");
+        map.put("333", "333");
+        System.out.println(map.keySet().stream().findAny().orElse(""));
     }
 }

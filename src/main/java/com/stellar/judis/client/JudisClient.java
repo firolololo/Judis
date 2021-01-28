@@ -1,8 +1,8 @@
 package com.stellar.judis.client;
 
-import com.alibaba.fastjson.JSONObject;
 import com.stellar.judis.rpc.ClientStringCommand;
 import com.stellar.judis.rpc.CommandResponse;
+import com.stellar.judis.util.JsonUtil;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.protocol.TMultiplexedProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -23,7 +23,7 @@ public class JudisClient {
             ClientStringCommand.Client client = new ClientStringCommand.Client(protocol);
             transport.open();
             CommandResponse response = client.setString(key, value, -1, false);
-            System.out.println(JSONObject.toJSONString(response));
+            System.out.println(JsonUtil.jsonToString(response));
             transport.close();
         } catch (Exception e) {
             e.printStackTrace();

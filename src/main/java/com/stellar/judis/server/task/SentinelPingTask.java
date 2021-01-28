@@ -1,6 +1,5 @@
 package com.stellar.judis.server.task;
 
-import com.alibaba.fastjson.JSONObject;
 import com.stellar.judis.exception.JudisNodeAccessException;
 import com.stellar.judis.meta.NodeContext;
 import com.stellar.judis.rpc.Answer;
@@ -8,6 +7,7 @@ import com.stellar.judis.rpc.Ping;
 import com.stellar.judis.rpc.SentinelOtherNode;
 import com.stellar.judis.server.Master;
 import com.stellar.judis.server.sentinel.Sentinel;
+import com.stellar.judis.util.JsonUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.thrift.protocol.TCompactProtocol;
@@ -46,11 +46,11 @@ public class SentinelPingTask implements Runnable {
             Ping pingMaster = new Ping();
             pingMaster.setAddress(sentinel.getAddress());
             pingMaster.setPort(sentinel.getPort());
-            pingMaster.setBody(JSONObject.toJSONString(sentinel));
+            pingMaster.setBody(JsonUtil.jsonToString(sentinel));
             Answer answer = client.ping(pingMaster);
             if (answer == null || !answer.isSuccess()) throw new JudisNodeAccessException();
             String body = answer.getBody();
-            Master master = JSONObject.parseObject(body, Master.class);
+            Master master = JsonUtil.stringToJson(body, Master.class);
             context.setMaster(master);
             sentinel.getEventCenter().triggerSuccessEvent(context);
         } catch (Exception e) {

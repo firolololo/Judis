@@ -1,9 +1,10 @@
 package com.stellar.judis.server.persist;
 
-import com.alibaba.fastjson.JSONObject;
 import com.stellar.judis.exception.JudisCoreException;
 import com.stellar.judis.meta.Cache;
+import com.stellar.judis.meta.ElementHandle;
 import com.stellar.judis.meta.JudisElement;
+import com.stellar.judis.util.JsonUtil;
 
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Method;
@@ -45,40 +46,37 @@ public enum JudisOperationBean {
     JudisOperationBean(String operation) {
         this.operation = operation;
     }
-
-    private static final String OPERATION_JSON_OPERATION_NAME = "opt";
-    private static final String OPERATION_JSON_OPERATION_CLASS_NAME = "clazz";
-    private static final String OPERATION_JSON_OPERATION_BODY = "body";
-    private static final String OPERATION_JSON_OPERATION_PARAM = "param";
     private static final String OPERATION_JSON_OPERATION_SPLIT = ",";
     private static final String OPERATION_JSON_OPERATION_DESERIALIZE = "deserialize";
 
     public String parse(String className, JudisElement element, String... args) {
         if (null == className || className.equals("")) throw new RuntimeException("Invalid class name");
         if (element == null) throw new RuntimeException("Invalid element");
-        JSONObject object = new JSONObject();
-        object.put(OPERATION_JSON_OPERATION_NAME, operation);
-        object.put(OPERATION_JSON_OPERATION_CLASS_NAME, className);
-        object.put(OPERATION_JSON_OPERATION_BODY, element.getTypeImpl().serialize());
+        ElementHandle handle = new ElementHandle();
+        handle.setOpt(operation);
+        handle.setClazz(className);
+        handle.setBody(element.getTypeImpl().serialize());
         if (args.length == 0) throw new RuntimeException("Invalid param numbers");
-        object.put(OPERATION_JSON_OPERATION_PARAM, args.length == 1 ? args[0] : String.join(OPERATION_JSON_OPERATION_SPLIT, args));
-        return JSONObject.toJSONString(object);
+        handle.setParam(args.length == 1 ? args[0] : String.join(OPERATION_JSON_OPERATION_SPLIT, args));
+        return JsonUtil.jsonToString(handle);
     }
 
     abstract void invoke(Cache cache, JudisElement element, String... args) throws JudisCoreException;
 
     public static void execute(Cache cache, String jsonObject) {
         try {
-            JSONObject object = JSONObject.parseObject(jsonObject);
-            String opt = object.getString(OPERATION_JSON_OPERATION_NAME);
-            String className = object.getString(OPERATION_JSON_OPERATION_CLASS_NAME);
-            String body = object.getString(OPERATION_JSON_OPERATION_BODY);
-            String params = object.getString(OPERATION_JSON_OPERATION_PARAM);
+            ElementHandle handle = JsonUtil.stringToJson(jsonObject, ElementHandle.class);
+            if (handle == null) return;
+            String opt = handle.getOpt();
+            String className = handle.getClazz();
+            String body = handle.getBody();
+            String params = handle.getParam();
             JudisElement element;
             if (!judisElementMap.containsKey(className)) {
                 Class<?> clazz = Class.forName(className);
                 Method method = clazz.getDeclaredMethod(OPERATION_JSON_OPERATION_DESERIALIZE, String.class);
                 element = (JudisElement)method.invoke(clazz.newInstance(), body);
+                judisElementMap.put(className, element);
             } else {
                 element = judisElementMap.get(className);
             }

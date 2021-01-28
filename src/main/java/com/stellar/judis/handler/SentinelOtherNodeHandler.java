@@ -1,9 +1,9 @@
 package com.stellar.judis.handler;
 
-import com.alibaba.fastjson.JSONObject;
 import com.stellar.judis.rpc.*;
 import com.stellar.judis.server.Master;
 import com.stellar.judis.server.core.CoreOperation;
+import com.stellar.judis.util.JsonUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.thrift.TException;
@@ -26,7 +26,7 @@ public class SentinelOtherNodeHandler implements SentinelOtherNode.Iface {
         LOG.info("Master {} ping success, Sentinel info:{}", master.getId(), message.getBody());
         Answer answer = new Answer();
         answer.setSuccess(true);
-        answer.setBody(JSONObject.toJSONString(master));
+        answer.setBody(JsonUtil.jsonToString(master));
         return answer;
     }
 

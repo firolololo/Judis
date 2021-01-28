@@ -52,13 +52,8 @@ public class AofAdaptor implements PersistAdaptor {
     public Cache load() {
         if (Files.exists(filePath)) {
             long startTime = System.currentTimeMillis();
-            List<String> records = FileUtil.readLines(filePath);
-            if (records == null || records.size() == 0)
-                return new Cache();
             Cache cache = new Cache();
-            for (String record: records) {
-                JudisOperationBean.execute(cache, record);
-            }
+            FileUtil.readLinesByChannel(filePath, StandardCharsets.UTF_8, (record) -> JudisOperationBean.execute(cache, record));
             long endTime = System.currentTimeMillis();
             float excTime= (float)(endTime - startTime) / 1000;
             LOG.info("load cost time:{}s", excTime);

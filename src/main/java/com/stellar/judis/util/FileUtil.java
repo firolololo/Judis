@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.file.*;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * @author firo
@@ -40,9 +41,8 @@ public class FileUtil {
         return null;
     }
 
-    public static List<String> readLinesByChannel(Path path, Charset charset) {
+    public static void readLinesByChannel(Path path, Charset charset, Consumer<String> consumer) {
         try (FileChannel channel = FileChannel.open(path)) {
-            List<String> list = new LinkedList<>();
             ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
             ByteBuffer stringBuffer = ByteBuffer.allocate(1024);
             int bytesRead = channel.read(buffer);
@@ -50,12 +50,15 @@ public class FileUtil {
                 buffer.flip();
                 while (buffer.hasRemaining()) {
                     byte b = buffer.get();
-                    if (b == 10 || b == 13) {
+                    if ((b == 10 || b == 13) && stringBuffer.position() > 0) {
                         stringBuffer.flip();
                         final String line = charset.decode(stringBuffer).toString();
-                        list.add(line);
+                        consumer.accept(line);
                         stringBuffer.clear();
                     } else {
+                        if (b == 10 || b == 13) {
+                            continue;
+                        }
                         if (stringBuffer.hasRemaining()) {
                             stringBuffer.put(b);
                         } else {
@@ -63,17 +66,16 @@ public class FileUtil {
                             byte[] newBuffer = new byte[capacity * 2];
                             System.arraycopy(stringBuffer.array(), 0, newBuffer, 0, capacity);
                             stringBuffer = (ByteBuffer)ByteBuffer.wrap(newBuffer).position(capacity);
+                            stringBuffer.put(b);
                         }
                     }
                 }
                 buffer.clear();
                 bytesRead = channel.read(buffer);
             }
-            return list;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
     }
 
     public static boolean createFile(Path path) {
